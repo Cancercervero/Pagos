@@ -1,0 +1,9 @@
+{
+  "_nota": "Precios de DEMO en pesos (montos pequeños porque pey se prueba en producción con dinero real). Cambiar por precios reales del negocio.",
+  "servicios": [
+    {"id": "corte",     "nombre": "Corte de cabello",       "descripcion": "Corte y peinado",               "precio": 2.00, "duracion_min": 45},
+    {"id": "tinte",     "nombre": "Tinte",                  "descripcion": "Aplicación de color completo",  "precio": 3.00, "duracion_min": 90},
+    {"id": "barba",     "nombre": "Arreglo de barba",       "descripcion": "Perfilado y toalla caliente",   "precio": 1.00, "duracion_min": 30},
+    {"id": "tratamiento","nombre": "Tratamiento capilar",   "descripcion": "Hidratación profunda",          "precio": 2.50, "duracion_min": 40}
+  ]
+}

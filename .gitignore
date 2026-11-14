@@ -1,0 +1,21 @@
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Datos locales
+data/app.db
+data/app.db-*
+data/archivos/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
+*.log

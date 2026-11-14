@@ -1,0 +1,29 @@
+{
+  "nombre_comercial": "Estética Demo",
+  "responsable": "Dueño Demo",
+  "rfc": "EKU9003173C9",
+  "_rfc_nota": "RFC de PRUEBA del SAT (corresponde a persona moral). Para la demo de RESICO persona física cámbialo por un RFC de prueba de persona física. Nunca datos reales en el repo público.",
+  "regimen_fiscal": "626",
+  "_regimen_nota": "626 = Régimen Simplificado de Confianza (RESICO)",
+  "cp": "06000",
+  "moneda": "MXN",
+  "iva": 0.16,
+  "anticipo_pct": 0.5,
+  "expiracion_cobro_s": 360,
+  "zona_horaria": "America/Mexico_City",
+  "horarios": {
+    "dias": ["lun", "mar", "mie", "jue", "vie", "sab"],
+    "inicio": "10:00",
+    "fin": "19:00",
+    "intervalo_min": 60
+  },
+  "aviso_privacidad_url": "https://<tu-app>/privacidad",
+  "isr_resico_pf_mensual": [
+    {"hasta": 25000.00,   "tasa": 0.0100},
+    {"hasta": 50000.00,   "tasa": 0.0110},
+    {"hasta": 83333.33,   "tasa": 0.0150},
+    {"hasta": 208333.33,  "tasa": 0.0200},
+    {"hasta": 3500000.00, "tasa": 0.0250}
+  ],
+  "_isr_nota": "Tabla ISR RESICO persona física (LISR art. 113-E). Verificar vigencia antes de presentar. Solo estimación informativa."
+}

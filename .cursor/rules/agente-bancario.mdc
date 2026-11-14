@@ -1,0 +1,22 @@
+---
+description: Reglas del proyecto Agente Bancario por WhatsApp (Cursor Hackatón México, pey/CoDi)
+alwaysApply: true
+---
+
+# Reglas del proyecto
+
+- La fuente de verdad es `INSTRUCCIONES.md`. Para la API de pey, `docs/pey_openapi.json`. No inventes endpoints ni campos.
+- Stack: Python 3.11+, FastAPI, SQLite, httpx, cliente `openai` compatible (LLM por entorno). Sin frameworks de frontend.
+- Los montos van en **centavos (int)** en la base de datos. Solo se convierten a pesos al llamar a pey o al mostrarlos.
+- **Solo el webhook firmado de pey** (o la reconciliación con `GET /transaction/{id}`) puede marcar algo como pagado. El LLM nunca decide pagos ni calcula montos.
+- Webhooks:
+  - Verificar la firma sobre el **cuerpo crudo**.
+  - Deduplicar por `webhook-id` y por `transactionId` (UNIQUE).
+  - Hacer todo en una transacción SQLite.
+  - Responder 200 rápido y mandar los mensajes después del commit.
+- Las tools de dueño validan el rol dentro de la propia tool.
+- Nunca escribas secretos en el código ni en los logs. Todo va por `.env` (ignorado por git).
+- `referencia_cerberus/` es solo referencia: se copia y adapta, nunca se importa.
+- Lo simulado (timbrado CFDI, estimación de impuestos) se rotula como tal en los mensajes y en el panel.
+- Mensajes al usuario: español de México, cortos, estilo WhatsApp, tono cordial y profesional.
+- Trabaja por fases (`PROMPTS.md`). Cada fase termina con sus tests pasando.

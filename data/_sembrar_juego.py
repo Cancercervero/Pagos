@@ -1,15 +1,15 @@
-"""Una sola vez: los cinco nombres de las cuentas pey, con historial local."""
+"""Una sola vez: cinco personas de ejemplo, con historial local."""
 
 from app.db import ahora_iso, conectar, transaccion
 from app.departamentos.cotizaciones import crear_cotizacion
 from app.personas import guardar_mensaje, obtener_o_crear
 
 GENTE = (
-    ("5511111111", "Miriam Nava", "dueno"),
-    ("5522222222", "Adrián Soto", "cliente"),
-    ("5533333333", "David Perez", "cliente"),
-    ("5544444444", "Ramón Orraca", "cliente"),
-    ("5555555555", "Santiago Tena", "proveedor"),
+    ("5511111111", "Marisol Navarro", "dueno"),
+    ("5522222222", "Andrés Solís", "cliente"),
+    ("5533333333", "Daniel Paredes", "cliente"),
+    ("5544444444", "Rodrigo Ortega", "cliente"),
+    ("5555555555", "Sergio Trejo", "proveedor"),
 )
 
 
@@ -34,7 +34,7 @@ def main() -> None:
             with transaccion() as conn:
                 conn.execute("UPDATE contactos SET nombre=? WHERE telefono10=?", (nombre, tel))
 
-    adrian = obtener_o_crear("5522222222", nombre="Adrián Soto")
+    adrian = obtener_o_crear("5522222222", nombre="Andrés Solís")
     pedido = "Quiero un corte para el sábado en la tarde."
     if not ya(adrian["id"], pedido):
         guardar_mensaje(adrian["id"], "user", pedido)
@@ -46,7 +46,7 @@ def main() -> None:
     if not tiene:
         crear_cotizacion(adrian["id"], [{"servicio_id": "corte", "cantidad": 1}])
 
-    david = obtener_o_crear("5533333333", nombre="David Perez")
+    david = obtener_o_crear("5533333333", nombre="Daniel Paredes")
     seguimiento = "La vez pasada quedé bien con la barba. Ahora quiero un tinte."
     if not ya(david["id"], seguimiento):
         guardar_mensaje(david["id"], "user", seguimiento)
@@ -63,12 +63,12 @@ def main() -> None:
                 (david["id"], ahora_iso()),
             )
 
-    ramon = obtener_o_crear("5544444444", nombre="Ramón Orraca")
+    ramon = obtener_o_crear("5544444444", nombre="Rodrigo Ortega")
     pregunta = "¿Cuánto sale el tratamiento capilar? Lo quiero entre semana."
     if not ya(ramon["id"], pregunta):
         guardar_mensaje(ramon["id"], "user", pregunta)
 
-    santiago = obtener_o_crear("5555555555", nombre="Santiago Tena")
+    santiago = obtener_o_crear("5555555555", nombre="Sergio Trejo")
     surtido = "Soy Santiago. El lunes puedo surtir el tinte. Avísame cuántos frascos."
     if not ya(santiago["id"], surtido):
         guardar_mensaje(santiago["id"], "user", surtido)

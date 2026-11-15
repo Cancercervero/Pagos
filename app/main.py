@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from app import tareas
 from app.agente.entrada import atender_whatsapp, procesar_entrada
+from app.portada import portada_html
 from app.config import archivos_dir, env, negocio, owner_phones, panel_key, tareas_activas
 from app.db import ahora_iso, conectar, filas, init_db, marcar_favorito, transaccion
 from app.departamentos import cargas, cobranza
@@ -140,14 +141,9 @@ async def salud():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def inicio():
-    nombre = negocio().get("nombre_comercial", "Agente bancario")
-    return f"""<!doctype html><meta charset="utf-8"><title>{nombre}</title>
-    <body style="font-family:Georgia,serif;background:#f3eee6;color:#241c22;padding:48px">
-    <h1>Anillo</h1>
-    <p>Agente bancario para la Ciudad de México. El cobro lo confirma el banco. La mesa aparta el impuesto.</p>
-    <p><a style="color:#7a3048" href="/app">App</a> · <a style="color:#7a3048" href="/simulacion">Mesa</a> · <a style="color:#7a3048" href="/panel">Panel</a></p>
-    </body>"""
+async def inicio(k: str | None = Query(None)):
+    """Portada. Explica qué es y lleva a las tres puertas. La llave viaja en el enlace."""
+    return portada_html(negocio().get("nombre_comercial", "Estética Demo"), k if k and k == panel_key() else "")
 
 
 @app.get("/gracias", response_class=HTMLResponse)

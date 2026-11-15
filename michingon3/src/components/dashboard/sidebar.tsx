@@ -61,6 +61,8 @@ export function Sidebar({ businessId }: SidebarProps) {
             items: [
                 { name: 'Pedidos', href: `/business/${businessId}/orders`, emoji: '📝' },
                 { name: 'Inventario', href: `/business/${businessId}/inventory`, emoji: '📦', tutorialId: 'inventory' },
+                { name: 'Cargar inventario', href: `/business/${businessId}/inventory/cargar`, emoji: '📥' },
+                { name: 'Agente WhatsApp', href: `/business/${businessId}/whatsapp`, emoji: '💬' },
                 { name: 'Recetas', href: `/business/${businessId}/recipes`, emoji: '👨‍🍳', tutorialId: 'recipes' },
                 { name: 'Caja (POS)', href: `/business/${businessId}/pos`, emoji: '🏪', tutorialId: 'pos' },
             ]
@@ -82,7 +84,6 @@ export function Sidebar({ businessId }: SidebarProps) {
                 { name: 'Personal', href: `/business/${businessId}/staff`, emoji: '👔' },
                 { name: 'Activos', href: `/business/${businessId}/assets`, emoji: '🏢' },
                 { name: 'Nómina', href: `/business/${businessId}/payroll`, emoji: '👷' },
-                { name: 'Cerebro (IA)', href: `/business/${businessId}/brain`, emoji: '🧠', tutorialId: 'brain' },
                 { name: 'Configuración', href: `/business/${businessId}/settings`, emoji: '⚙️', tutorialId: 'settings' },
             ]
         }

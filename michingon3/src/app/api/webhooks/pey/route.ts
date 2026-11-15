@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { procesarPago, verificarFirmaPey } from '@/lib/server/pagos';
+import { notificarPago } from '@/lib/server/notificaciones';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -53,8 +54,9 @@ export async function POST(req: NextRequest) {
             // pey aún no lo reporta PAID: pedimos reintento
             return NextResponse.json({ ok: false, resultado: r.resultado }, { status: 409 });
         }
-        // Aquí (después del commit) irán los avisos por WhatsApp (fase M3/M5)
-        return NextResponse.json({ ok: true, ...r });
+        // Avisos por WhatsApp DESPUÉS del commit (cliente, dueño y stock bajo)
+        await notificarPago(r);
+        return NextResponse.json({ ok: true, resultado: r.resultado });
     } catch (e) {
         console.error('[webhook pey] error procesando', e);
         return NextResponse.json({ error: 'error interno' }, { status: 500 });

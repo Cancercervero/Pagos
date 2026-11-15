@@ -207,7 +207,22 @@ Ver `michingon3/.env.example`: Firebase (público y admin), **LLM del agente** (
 | POS: botón "Cobrar con CoDi" → QR o push al banco → "PAGADO ✓" en vivo | `src/components/pos/CodiCheckoutModal.tsx`, `pos/page.tsx` | ✅ |
 | **Carga fácil de inventario:** Excel de la tienda, factura (XML/PDF) o foto de la lista → artículos agrupados con costo, precio, stock y **valor del inventario** | `src/lib/server/inventario-import.ts`, `src/app/api/inventario/*`, `inventory/cargar/page.tsx` | ✅ Excel y XML probados. Foto/PDF y agrupación necesitan `LLM_*` |
 | LLM propio (OpenAI-compatible, no Genkit) | `src/lib/agente/llm.ts` | ✅ |
-| Agente de WhatsApp (escena B) | `src/lib/agente/*`, webhook WhatsApp | ⏳ siguiente |
+| Agente de WhatsApp (escena B): ver productos, crear pedido, cobro push CoDi, estado, órdenes de compra, "SÍ" aprueba y manda al proveedor, resumen del día; roles dueño/staff/cliente | `src/lib/agente/agente.ts`, `src/lib/whatsapp.ts`, `src/app/api/webhooks/whatsapp/route.ts` | ✅ código. Falta probar con `WHATSAPP_*` y `LLM_*` reales |
+| Avisos después del pago (cliente, dueño, stock bajo) | `src/lib/server/notificaciones.ts` | ✅ |
+| Chat web del agente (respaldo si WhatsApp falla en vivo) | `business/[id]/whatsapp`, `/api/agente/chat` | ✅ |
+| Despliegue | `functions/package.json` con las dependencias nuevas (`firebase-admin`, `qrcode`, `xlsx`, `pdf-parse`, `firebase-functions`) | ✅ listo; falta `firebase deploy` con las variables |
+
+### Cómo correrlo en local (5 minutos)
+
+```bash
+cd michingon3
+cp .env.example .env.local   # llena Firebase, PEY_*, LLM_*, WHATSAPP_*, OWNER_PHONES
+# Llave de servicio de Firebase (NO al repo): GOOGLE_APPLICATION_CREDENTIALS=C:/ruta/serviceAccountKey.json
+npm install
+npm run dev                  # http://localhost:3000
+cloudflared tunnel --url http://localhost:3000   # URL pública para los webhooks de pey y Meta
+```
+En `portal.pey.mx` registra el webhook `https://<túnel>/api/webhooks/pey` y copia el secreto a `PEY_WEBHOOK_SECRET`. Aunque el webhook falle, el POS confirma el pago consultando a pey cada 4 s (reconciliación del lado del servidor, igual de idempotente).
 
 ## 8. URLs de los webhooks
 

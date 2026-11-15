@@ -424,13 +424,16 @@ export async function reconciliarCobro(cobroId: string, minIntervaloMs = 4000) {
     await ref.update({ ultimaRevision: Timestamp.now() });
 
     try {
+        const { notificarPago } = await import('./notificaciones');
         if (c.peyTransactionId) {
             const r = await procesarPago({ transactionId: c.peyTransactionId, fuente: 'reconciliacion', cobroIdHint: cobroId });
+            await notificarPago(r);
             if (r.resultado !== 'no_pagado') return (await ref.get()).data() as CobroDoc;
         } else if (c.peyQrId) {
             const { items } = await transaccionesDeQr(c.peyQrId);
             for (const it of (items || []).filter((i) => i.status === 'PAID')) {
-                await procesarPago({ transactionId: it.id, fuente: 'reconciliacion', codiQrId: c.peyQrId, cobroIdHint: cobroId });
+                const r = await procesarPago({ transactionId: it.id, fuente: 'reconciliacion', codiQrId: c.peyQrId, cobroIdHint: cobroId });
+                await notificarPago(r);
             }
         }
     } catch (e) {

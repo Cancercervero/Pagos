@@ -88,8 +88,8 @@ Listo cuando: las escenas A y B corren completas en la URL pública.
 # Ruta alternativa (Python): solo si Michingón no despliega a tiempo
 
 Instrucciones para el equipo:
-- **Cursor** escribe el código. Pégale **una fase a la vez** y no pases a la siguiente hasta que se cumpla el "Listo cuando".
-- **Grok** se usa para el pitch, el README, el guion del video, revisar la lógica de impuestos y como segundo par de ojos en el código. Si dentro de Cursor eliges el modelo Grok, los prompts de Cursor sirven igual.
+- **Cursor** escribe y aplica el código. Pégale **una fase a la vez** y no pases a la siguiente hasta que se cumpla el "Listo cuando".
+- **Grok** es **arquitecto y programador**: hace `ARQUITECTURA.md` del Michingón modificado y el código TypeScript de cada fase para pegarlo en Cursor, y revisa el código. **El pitch, el README de venta y el video van solo al final (M6).** Si dentro de Cursor eliges el modelo Grok, los prompts de Cursor sirven igual.
 
 Todos los prompts asumen que el proyecto está abierto en Cursor, en la carpeta `agente-bancario/`.
 
@@ -213,7 +213,15 @@ Listo cuando: la app vive en una URL pública, ambos webhooks apuntan ahí y el 
 
 ---
 
-## PROMPT PARA GROK: pitch, README y video
+## PROMPT PARA GROK: arquitecto y programador (EL PRINCIPAL, úsalo ahora)
+
+El prompt completo está al final de `GROK_LEEME_PRIMERO.md`. Le pide a Grok `ARQUITECTURA.md` del Michingón modificado y el **código TypeScript completo de M1**. Después de M1, pídele lo mismo para cada fase:
+
+```
+Perfecto. Ahora el código COMPLETO de la fase M<N> de PROMPTS.md, archivo por archivo, con la ruta de cada uno dentro de michingon3/, listo para pegar en Cursor. Respeta ARQUITECTURA.md, MICHINGON.md §3–§5 y los contratos exactos de docs/pey_openapi.json. Nada de la IA de Michingón (src/ai/). Al final dime cómo probar el "Listo cuando" de esa fase.
+```
+
+## PROMPT PARA GROK: pitch, README y video (⚠️ SOLO EN M6, cuando las escenas A y B ya funcionen)
 
 ```
 Eres el estratega de producto de un equipo en el Cursor Hackatón México (reto: construir con CoDi usando la API de pey). Te paso el documento maestro del proyecto:

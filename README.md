@@ -1,6 +1,6 @@
 # Agente Bancario por WhatsApp
 
-> **⚠️ Versión `v3.1-arquitectura`.** La base del proyecto es la **arquitectura** de **[`michingon3/`](michingon3/)**, nuestra plataforma de negocio en vivo (Next.js + Firebase): POS, inventario, recetas, clientes, proveedores, pedidos, facturas, guía SAT, staff y modo personas. **Su IA no se usa.** Los pagos CoDi (pey) y un agente de WhatsApp nuevo se integran ahí. Guía: **[`MICHINGON.md`](MICHINGON.md)**. **IA o persona que trabajó con una versión anterior: lee [`GROK_LEEME_PRIMERO.md`](GROK_LEEME_PRIMERO.md).**
+> **⚠️ Versión `v3.2-construir`.** Prioridad: construir el software (arquitectura + código); pitch y video al final. La base del proyecto es la **arquitectura** de **[`michingon3/`](michingon3/)**, nuestra plataforma de negocio en vivo (Next.js + Firebase): POS, inventario, recetas, clientes, proveedores, pedidos, facturas, guía SAT, staff y modo personas. **Su IA no se usa.** Los pagos CoDi (pey) y un agente de WhatsApp nuevo se integran ahí. Guía: **[`MICHINGON.md`](MICHINGON.md)**. **IA o persona que trabajó con una versión anterior: lee [`GROK_LEEME_PRIMERO.md`](GROK_LEEME_PRIMERO.md).**
 
 Un agente que vive en el WhatsApp de tu negocio: cotiza, agenda, cobra por **CoDi** (vía la API de [pey](https://docs.pey.mx)), confirma pagos en el servidor, concilia, genera facturas en borrador, lleva el **inventario** (recetas por servicio, stock bajo, órdenes de compra a proveedores), el **archivo de clientes** y la **tienda**, y te dice cómo van tus cuentas y tus márgenes.
 

@@ -100,6 +100,17 @@
   @media (prefers-reduced-motion: reduce) {
     .banco.espera .aro { animation: none; }
   }
+  .falso { position: fixed; inset: 0; background: rgba(10,8,12,.72); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .falso.abierto { display: flex; }
+  .falso .hoja { background: #fffdf8; color: #241c22; border-radius: 22px; padding: 22px 24px; width: min(320px, 90vw); text-align: center; font-family: system-ui, sans-serif; }
+  .falso .icono { width: 120px; height: 120px; margin: 6px auto 10px; border-radius: 50%; border: 3px solid #d4145a; display: grid; place-items: center; font-size: 56px; }
+  .falso .icono.ok { border-color: #17a398; background: #e6f7f5; }
+  .falso .icono.pulso { animation: pulso 1s ease-in-out infinite; }
+  @keyframes pulso { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .falso h3 { margin: 4px 0; font-size: 18px; }
+  .falso p { margin: 4px 0; font-size: 13px; color: #5a4d55; }
+  .falso .sim { display: inline-block; margin-top: 10px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #7b2d8e; background: #f1e6f7; border-radius: 999px; padding: 4px 9px; }
+  .falso .cerrar { margin-top: 12px; background: none; border: 0; color: #7a6b73; font-size: 13px; text-decoration: underline; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -228,8 +239,24 @@ document.querySelector("#cara").onclick = async () => {
   ocupado = true;
   const boton = document.querySelector("#cara");
   boton.disabled = true;
-  boton.textContent = "Leyendo el rostro…";
+  const falso = document.querySelector("#falso");
+  const icono = document.querySelector("#falso-icono");
+  const titulo = document.querySelector("#falso-titulo");
+  const texto = document.querySelector("#falso-texto");
+  falso.classList.add("abierto");
+  icono.textContent = "🙂"; icono.className = "icono pulso";
+  titulo.textContent = "Mira a la cámara";
+  texto.textContent = "Trámite simulado: no se usa tu cara real.";
+  await new Promise((ok) => setTimeout(ok, 1400));
+  icono.textContent = "👆"; titulo.textContent = "O toca el sensor";
+  texto.textContent = "Si tu banco pide huella, es ahí.";
   await new Promise((ok) => setTimeout(ok, 900));
+  icono.textContent = "✓"; icono.className = "icono ok";
+  titulo.textContent = "Autorizado";
+  texto.textContent = "Tu banco confirmó el cobro.";
+  await new Promise((ok) => setTimeout(ok, 700));
+  falso.classList.remove("abierto");
+  boton.textContent = "Leyendo el rostro…";
   const r = await fetch("/api/simular-banco?k=" + encodeURIComponent(clave), {
     method: "POST",
     headers: {"Content-Type": "application/json"},
@@ -238,6 +265,11 @@ document.querySelector("#cara").onclick = async () => {
   ocupado = false;
   boton.textContent = r.ok ? "El banco ya avisó" : "No se pudo confirmar";
   await pintar();
+};
+document.querySelector("#falso-cerrar").onclick = () => {
+  document.querySelector("#falso").classList.remove("abierto");
+  ocupado = false;
+  document.querySelector("#cara").disabled = false;
 };
 
 async function pintar() {
@@ -319,5 +351,14 @@ function lista(sel, items, izq, der, vacio) {
   }
 }
 </script>
+<div class="falso" id="falso" role="dialog" aria-modal="true" aria-label="Autorizar con Face ID o huella (simulado)">
+  <div class="hoja">
+    <div class="icono pulso" id="falso-icono">🙂</div>
+    <h3 id="falso-titulo">Mira a la cámara</h3>
+    <p id="falso-texto">Confirma el cobro de tu banco.</p>
+    <span class="sim">Simulado · sin cámara ni huella</span><br>
+    <button class="cerrar" id="falso-cerrar" type="button">Cancelar</button>
+  </div>
+</div>
 </body>
 </html>

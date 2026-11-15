@@ -182,6 +182,33 @@ Ver `michingon3/.env.example`: Firebase (público y admin), **LLM del agente** (
 
 **En producción (Firebase Functions):** las variables van en `functions/.env` (o `functions/.env.local`, que el workflow copia). Los secretos (`PEY_API_KEY`, `PEY_WEBHOOK_SECRET`, `WHATSAPP_TOKEN`) van con `firebase functions:secrets:set` si da tiempo, o en el `.env` que **no** se commitea.
 
+## 7B. Bases del concurso y activación de pey (hoja del evento)
+
+- **Entrega:** domingo 15 de noviembre, **1:00 PM CDMX**, un proyecto por equipo, en el formulario de la hoja (o con su QR). Se pide:
+  - nombre del equipo y descripción
+  - **repositorio público (obligatorio)**
+  - link en vivo (preferido)
+  - video (opcional)
+  - correos de los integrantes
+- **Alta ante Banxico:** tarda unos 5 días. **Para probar hoy** se usan las **CLABEs pre-autorizadas** impresas en la hoja del evento. Se dan de alta en `portal.pey.mx`. **No se copian a este repo público.**
+- **Transacciones de prueba de $0.01.** Los pagos de prueba **no se devuelven**, por eso `PEY_MONTO_DEMO_CENTAVOS=1`: el POS muestra el total real de la venta y le cobra a pey $0.01 con la etiqueta "DEMO" (regla "si simulas, indícalo").
+- Para publicar el proyecto con cobros reales, hay que registrar una CLABE propia cuando esté activa.
+- Documentación: `docs.pey.mx`.
+
+## 7C. Qué ya está construido (`v4`)
+
+| Pieza | Archivos | Estado |
+|---|---|---|
+| Cliente pey (QR, push, link, transacciones) | `src/lib/pey.ts` | ✅ contratos del OpenAPI |
+| Pagos idempotentes + efectos (venta, stock con `increment`, pedido, orden de compra por stock bajo, eventos) | `src/lib/server/pagos.ts` | ✅ |
+| Firma Standard Webhooks | `verificarFirmaPey` en `pagos.ts` | ✅ probada |
+| Crear y consultar cobro (+ reconciliación con pey si el webhook no llega) | `src/app/api/pey/cobro/route.ts`, `src/app/api/pey/cobro/[id]/route.ts` | ✅ |
+| Webhook de pey | `src/app/api/webhooks/pey/route.ts` | ✅ |
+| POS: botón "Cobrar con CoDi" → QR o push al banco → "PAGADO ✓" en vivo | `src/components/pos/CodiCheckoutModal.tsx`, `pos/page.tsx` | ✅ |
+| **Carga fácil de inventario:** Excel de la tienda, factura (XML/PDF) o foto de la lista → artículos agrupados con costo, precio, stock y **valor del inventario** | `src/lib/server/inventario-import.ts`, `src/app/api/inventario/*`, `inventory/cargar/page.tsx` | ✅ Excel y XML probados. Foto/PDF y agrupación necesitan `LLM_*` |
+| LLM propio (OpenAI-compatible, no Genkit) | `src/lib/agente/llm.ts` | ✅ |
+| Agente de WhatsApp (escena B) | `src/lib/agente/*`, webhook WhatsApp | ⏳ siguiente |
+
 ## 8. URLs de los webhooks
 
 Con Firebase:

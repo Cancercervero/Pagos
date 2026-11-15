@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { Product } from '@/types/business';
 import { CameraModal } from '@/components/ui/camera-modal';
 import { scanProduct } from '@/app/actions/scan-actions';
+import { CodiCheckoutModal } from '@/components/pos/CodiCheckoutModal';
 
 interface CartItem {
     product: Product;
@@ -19,6 +20,7 @@ export default function POSPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [cart, setCart] = useState<CartItem[]>([]);
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+    const [showCodi, setShowCodi] = useState(false);
 
     // Camera State
     const [showCamera, setShowCamera] = useState(false);
@@ -257,7 +259,14 @@ export default function POSPage() {
                             disabled={cart.length === 0}
                             className="w-full py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
                         >
-                            Cobrar
+                            Cobrar en efectivo
+                        </button>
+                        <button
+                            onClick={() => setShowCodi(true)}
+                            disabled={cart.length === 0}
+                            className="w-full mt-2 py-3 bg-fuchsia-600 hover:bg-fuchsia-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold rounded-lg transition"
+                        >
+                            Cobrar con CoDi
                         </button>
                     </div>
                 </div>
@@ -297,6 +306,20 @@ export default function POSPage() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {showCodi && (
+                <CodiCheckoutModal
+                    items={cart.map((item) => ({
+                        productId: item.product.id,
+                        productName: item.product.name,
+                        quantity: item.quantity,
+                        price: item.product.price,
+                    }))}
+                    total={total}
+                    onPagado={() => setCart([])}
+                    onClose={() => setShowCodi(false)}
+                />
             )}
 
             <CameraModal

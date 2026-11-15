@@ -35,7 +35,7 @@ export interface Sale {
     products: SaleItem[];
     clientId?: string;
     total: number;
-    paymentMethod: 'cash' | 'card' | 'transfer';
+    paymentMethod: 'cash' | 'card' | 'transfer' | 'codi';
     status: 'completed' | 'pending' | 'cancelled';
     createdAt: Date;
     employeeId?: string;

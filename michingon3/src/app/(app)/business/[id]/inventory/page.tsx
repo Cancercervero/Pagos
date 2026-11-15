@@ -102,12 +102,11 @@ export default function InventoryPage() {
                         Conciliar Inventario
                     </button>
                     <button
-                        onClick={() => setShowCamera(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium"
-                        disabled={isScanning}
+                        onClick={() => router.push(`/business/demo/inventory/cargar`)}
+                        className="flex items-center gap-2 px-4 py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 transition text-sm font-semibold shadow-sm"
                     >
                         <Camera className="w-4 h-4" />
-                        {isScanning ? 'Escaneando...' : 'Escanear Factura'}
+                        Cargar inventario (Excel, factura o foto)
                     </button>
                     <button
                         onClick={() => handleOpenModal()}

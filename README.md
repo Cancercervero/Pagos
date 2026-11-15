@@ -1,5 +1,7 @@
 # Agente Bancario por WhatsApp
 
+> **⚠️ Versión `v2-negocio-completo`.** Se agregaron el almacén Donna, la tienda, las compras a proveedores, el archivo de clientes y la atención a clientes. **IA o persona que trabajó con la versión anterior: lee [`GROK_LEEME_PRIMERO.md`](GROK_LEEME_PRIMERO.md).**
+
 Un agente que vive en el WhatsApp de tu negocio: cotiza, agenda, cobra por **CoDi** (vía la API de [pey](https://docs.pey.mx)), confirma pagos en el servidor, concilia, genera facturas en borrador, lleva el **inventario** (recetas por servicio, stock bajo, órdenes de compra a proveedores), el **archivo de clientes** y la **tienda**, y te dice cómo van tus cuentas y tus márgenes.
 
 Proyecto para el **Cursor Hackatón México** (CDMX, noviembre 2026).

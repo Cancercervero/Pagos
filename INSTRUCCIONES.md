@@ -1,5 +1,7 @@
 # Agente Bancario por WhatsApp: instrucciones maestras
 
+> **Versión `v2-negocio-completo`.** Si leíste una versión anterior, primero lee `GROK_LEEME_PRIMERO.md`: ahí está todo lo que se agregó (almacén Donna, tienda, compras, clientes, atención, rol staff).
+
 > Documento fuente de verdad para quien programe este proyecto (Cursor, Grok o una persona).
 > Léelo completo antes de escribir código. Si algo aquí choca con tu intuición, gana este documento.
 > Si algo choca con `docs/pey_openapi.json`, gana el OpenAPI y se corrige este documento.

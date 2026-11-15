@@ -158,6 +158,51 @@ CREATE TABLE IF NOT EXISTS surte (
   PRIMARY KEY (contacto_id, producto_id)
 );
 
+CREATE TABLE IF NOT EXISTS recetas (
+  servicio_id TEXT NOT NULL,
+  producto_id INTEGER NOT NULL REFERENCES productos(id),
+  cantidad INTEGER NOT NULL,
+  PRIMARY KEY (servicio_id, producto_id)
+);
+
+CREATE TABLE IF NOT EXISTS atendidos (
+  id INTEGER PRIMARY KEY,
+  contacto_id INTEGER NOT NULL REFERENCES contactos(id),
+  servicio_id TEXT NOT NULL,
+  costo_centavos INTEGER NOT NULL DEFAULT 0,
+  creado_en TEXT NOT NULL,
+  UNIQUE (contacto_id, servicio_id)
+);
+
+CREATE TABLE IF NOT EXISTS ordenes_compra (
+  id INTEGER PRIMARY KEY,
+  contacto_id INTEGER NOT NULL REFERENCES contactos(id),
+  estado TEXT NOT NULL,
+  creado_en TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS orden_lineas (
+  orden_id INTEGER NOT NULL REFERENCES ordenes_compra(id),
+  producto_id INTEGER NOT NULL REFERENCES productos(id),
+  cantidad INTEGER NOT NULL,
+  PRIMARY KEY (orden_id, producto_id)
+);
+
+CREATE TABLE IF NOT EXISTS ventas (
+  id INTEGER PRIMARY KEY,
+  total_centavos INTEGER NOT NULL,
+  metodo TEXT NOT NULL,
+  concepto TEXT NOT NULL,
+  creado_en TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS venta_lineas (
+  venta_id INTEGER NOT NULL REFERENCES ventas(id),
+  producto_id INTEGER NOT NULL REFERENCES productos(id),
+  cantidad INTEGER NOT NULL,
+  precio_centavos INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS gastos_personales (
   id INTEGER PRIMARY KEY,
   contacto_id INTEGER NOT NULL REFERENCES contactos(id),
@@ -323,6 +368,10 @@ def init_db() -> None:
         _llenar_lotes(conn)
         _insumos_proveedor(conn)
         _secciones_almacen(conn)
+        _recetas_salon(conn)
+        from app.departamentos.almacen import proponer_orden
+
+        proponer_orden(conn)
         conn.commit()
     seed_dueno()
 
@@ -399,9 +448,15 @@ def _insumos_proveedor(conn) -> None:
         ("tinte", "Tinte", 2),
         ("papel-bano", "Papel de baño", 4),
         ("papel-aluminio", "Papel aluminio", 2),
+        ("guantes", "Guantes", 2),
     ):
         row = conn.execute("SELECT id FROM productos WHERE sku=?", (sku,)).fetchone()
-        seccion = {"tinte": "Tintes", "papel-bano": "Limpieza", "papel-aluminio": "Varios"}.get(sku, "Varios")
+        seccion = {
+            "tinte": "Tintes",
+            "papel-bano": "Limpieza",
+            "papel-aluminio": "Varios",
+            "guantes": "Limpieza",
+        }.get(sku, "Varios")
         if row:
             pid = row["id"]
             conn.execute(
@@ -427,9 +482,26 @@ def _secciones_almacen(conn) -> None:
         ("tinte", "Tintes"),
         ("papel-bano", "Limpieza"),
         ("papel-aluminio", "Varios"),
+        ("guantes", "Limpieza"),
     ):
         conn.execute("UPDATE productos SET seccion=? WHERE sku=?", (seccion, sku))
     conn.execute("UPDATE productos SET seccion='Varios' WHERE seccion='Insumos'")
+
+
+def _recetas_salon(conn) -> None:
+    """El tinte pagado no baja el anaquel. Lo baja la receta cuando ya se atendió."""
+    for servicio, sku, cantidad in (
+        ("tinte", "tinte", 1),
+        ("tinte", "papel-aluminio", 1),
+        ("tinte", "guantes", 1),
+    ):
+        prod = conn.execute("SELECT id FROM productos WHERE sku=?", (sku,)).fetchone()
+        if not prod:
+            continue
+        conn.execute(
+            "INSERT OR IGNORE INTO recetas (servicio_id, producto_id, cantidad) VALUES (?, ?, ?)",
+            (servicio, prod["id"], cantidad),
+        )
 
 
 def _llenar_consumos(conn) -> None:

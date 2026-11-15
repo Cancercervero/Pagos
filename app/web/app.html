@@ -85,7 +85,7 @@
   #volver-cara { margin-top: 10px; color: var(--rosa); }
   header.barra { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
   header.barra strong { font-family: var(--serif); font-size: 22px; }
-  #quien { background: #f2c14e; color: var(--tinta); border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 600; }
+  #quien { background: #f2c14e; color: var(--tinta); border: 0; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 14px; font-weight: 600; }
   .grupo { margin: 12px 0 0; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--suave); }
   .cuadros { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .cuadros button { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 112px; text-align: left; padding: 12px; border-radius: 18px; background: var(--papel); box-shadow: inset 0 0 0 1px var(--borde); }
@@ -136,6 +136,8 @@
   .servicio { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
   button.estrella { font-size: 22px; line-height: 1; min-width: 36px; min-height: 36px; color: var(--suave); }
   button.estrella.prendida { color: #f2c14e; }
+  button.ya { background: var(--rosa); color: #fff6ec; border-radius: 999px; padding: 6px 10px; font-size: 13px; font-weight: 600; }
+  button.ya:disabled { opacity: .55; }
   a.grande { display: block; text-align: center; text-decoration: none; margin-top: 8px; }
   .cal-mes { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 4px; }
   .cal-mes strong { text-align: center; font-weight: 600; }
@@ -171,6 +173,9 @@
   .malla .pozo.verde { background: #2f9b4a; }
   .malla .pozo.morado { background: #7a2e86; }
   .malla .nombre { font-weight: 600; font-size: 15px; }
+  .malla .grupo { grid-column: 1 / -1; margin: 8px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
+  #cuerpo .fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--borde); }
+  #cuerpo button.ancho { display: block; width: 100%; margin-top: 8px; background: var(--rosa); color: #fff6ec; border-radius: 16px; padding: 12px; font-weight: 700; }
   #frase { display: none; }
   .flecha { color: #14a39a; font-size: 22px; line-height: 1; }
   .volver { display: inline-flex; align-items: center; gap: 6px; background: var(--papel); color: var(--rosa); font-weight: 600; border-radius: 999px; padding: 8px 14px; margin-bottom: 8px; box-shadow: inset 0 0 0 1px var(--borde); }
@@ -257,7 +262,7 @@
   <section id="casa" hidden>
     <header class="barra">
       <strong>Anillo</strong>
-      <span id="quien">Yo</span>
+      <button id="quien" type="button">Yo</button>
     </header>
     <p class="ayuda" id="frase">Entra a una cosa a la vez.</p>
     <div class="malla" id="malla"></div>
@@ -277,6 +282,7 @@ const D = {
   chat: '<svg viewBox="0 0 80 80"><path d="M16 20h40a8 8 0 0 1 8 8v18a8 8 0 0 1-8 8H32l-12 12v-12h-4a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8z"/></svg>',
   agenda: '<svg viewBox="0 0 80 80"><rect x="16" y="18" width="48" height="46" rx="6"/><path d="M16 32h48M30 14v10M50 14v10"/></svg>',
   banco: '<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="22"/><circle cx="40" cy="40" r="8"/></svg>',
+  templo: '<svg viewBox="0 0 80 80"><path d="M40 10l30 20H10z"/><rect x="16" y="32" width="10" height="22"/><rect x="35" y="32" width="10" height="22"/><rect x="54" y="32" width="10" height="22"/><rect x="10" y="54" width="60" height="10"/></svg>',
   almacen: '<svg viewBox="0 0 80 80"><path d="M14 28l26-12 26 12-26 12z"/><path d="M14 28v24l26 12 26-12V28"/><path d="M40 40v24"/></svg>',
   dinero: '<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="22"/><path d="M40 26v28M32 32h12a6 6 0 0 1 0 12H32"/></svg>',
   gastos: '<svg viewBox="0 0 80 80"><path d="M24 30h32v28a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6z"/><path d="M30 30v-4a10 10 0 0 1 20 0v4"/></svg>',
@@ -319,6 +325,7 @@ let hiloSel = null;
 let citaAbierta = null;
 let diaAgenda = "";
 let pila = [];
+let carrito = {};
 let leyendo = false;
 
 function marcarTipo(tipo) {
@@ -549,11 +556,22 @@ function abrirCasa() {
   document.querySelector("#quien").textContent = rolUi === "negocio"
     ? (nombre ? nombre + " · dueña" : "Mi negocio")
     : (nombre || "Yo");
-  const piezas = rolUi === "negocio"
-    ? [["chat","Clientas","gente","rosa"],["agenda","Agenda","calendario","amarillo"],["banco","Banco","moneda","turquesa"],["almacen","Almacén","cajas","naranja"],["dinero","Dinero","billete","verde"],["seguridad","Seguridad","escudo","morado"],["resena","Reseñas","estrella","amarillo"]]
-    : [["chat","Estética","tijeras","rosa"],["escanear","Escanear","codigo","turquesa"],["agenda","Agenda","calendario","amarillo"],["banco","Banco","moneda","turquesa"],["gastos","Mis gastos","bolsa","naranja"],["seguridad","Seguridad","escudo","morado"],["resena","Reseñas","estrella","amarillo"]];
+  const grupos = rolUi === "negocio"
+    ? [
+        ["Operaciones", [["caja","Caja","tienda","rosa"],["almacen","Inventario","cajas","naranja"],["recetas","Recetas","frasco","morado"],["agenda","Agenda","calendario","amarillo"]]],
+        ["Finanzas", [["dinero","Dinero","billete","verde"],["banco","Banco","templo","turquesa"],["facturas","Facturas","lamina","naranja"]]],
+        ["El negocio", [["chat","Clientas","gente","rosa"],["seguridad","Seguridad","escudo","morado"],["resena","Reseñas","estrella","amarillo"]]]
+      ]
+    : [["", [["chat","Estética","tijeras","rosa"],["escanear","Escanear","codigo","turquesa"],["agenda","Agenda","calendario","amarillo"],["banco","Banco","moneda","turquesa"],["gastos","Mis gastos","bolsa","naranja"],["seguridad","Seguridad","escudo","morado"],["resena","Reseñas","estrella","amarillo"]]]];
   const malla = document.querySelector("#malla");
   malla.replaceChildren();
+  for (const [grupo, piezas] of grupos) {
+    if (grupo) {
+      const titulo = document.createElement("p");
+      titulo.className = "grupo";
+      titulo.textContent = grupo;
+      malla.appendChild(titulo);
+    }
   for (const [id, nombre, icono, tinta] of piezas) {
     const b = document.createElement("button");
     b.type = "button";
@@ -567,10 +585,12 @@ function abrirCasa() {
       empujar({vista: id, nombre: nombre});
     };
     malla.appendChild(b);
+    }
   }
   mostrar("casa");
   pintar();
 }
+document.querySelector("#quien").onclick = () => empujar({vista: "perfil", nombre: "Tu cuenta"});
 document.querySelector("#volver").onclick = () => {
   if (pila.length) history.back();
 };
@@ -654,8 +674,12 @@ function dibujar() {
   else if (vista === "banco") banco(caja);
   else if (vista === "agenda") agenda(caja);
   else if (vista === "almacen") almacenVista(caja);
+  else if (vista === "caja") cajaVista(caja);
+  else if (vista === "recetas") recetasVista(caja);
+  else if (vista === "facturas") facturasVista(caja);
   else if (vista === "anaquel") anaquelDe(caja);
-  else if (vista === "dinero") lista(caja, [["Cobrado", datos.mes.cobrado],["Apartado SAT", datos.mes.apartado],["Puedes usar", datos.mes.disponible]], "");
+  else if (vista === "dinero") dineroVista(caja);
+  else if (vista === "perfil") perfilVista(caja);
   else if (vista === "gastos") lista(caja, [...datos.metas.map((m) => [m.nombre, m.meta]), ...datos.gastos.map((g) => [g.concepto, g.monto])], "Aún no anotas gastos.");
   else if (vista === "resena") resenas(caja);
   if (y) caja.scrollTop = y;
@@ -795,12 +819,13 @@ function campoTexto(placeholder, etiqueta) {
   return input;
 }
 
-function serviciosDe(para, lista) {
+function serviciosDe(c) {
+  const para = c.telefono;
   const wrap = document.createElement("div");
   const h = document.createElement("h3");
   h.textContent = "Lo que ya usó";
   wrap.appendChild(h);
-  for (const s of lista || []) {
+  for (const s of c.servicios || []) {
     const fila = document.createElement("div");
     fila.className = "servicio";
     const nombre = document.createElement("span");
@@ -812,9 +837,48 @@ function serviciosDe(para, lista) {
     estrella.setAttribute("aria-label", (s.favorito ? "Quitar de favoritos " : "Guardar en favoritos ") + s.nombre);
     estrella.onclick = () => marcarFavorito(para, s.nombre);
     fila.append(nombre, estrella);
+    if (rolUi === "negocio" && /tinte/i.test(s.nombre)) {
+      const hecho = (c.atendidos || []).indexOf("tinte") >= 0;
+      const ya = document.createElement("button");
+      ya.type = "button";
+      ya.className = "ya";
+      ya.textContent = hecho ? "Ya se atendió" : "Ya quedó";
+      ya.disabled = hecho;
+      ya.onclick = () => atender(para, "tinte", ya);
+      fila.appendChild(ya);
+    }
     wrap.appendChild(fila);
   }
   return wrap;
+}
+
+async function atender(para, servicio, boton) {
+  boton.disabled = true;
+  const r = await fetch("/api/servicio-atendido?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: cabeceras(true),
+    body: JSON.stringify({desde: telefono, para: para, servicio: servicio})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    boton.disabled = false;
+    boton.textContent = data.detail || "No se pudo";
+    return;
+  }
+  pintar();
+}
+
+async function aprobarOrden(id, boton) {
+  boton.disabled = true;
+  const r = await fetch("/api/orden/aprobar?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: cabeceras(true),
+    body: JSON.stringify({telefono10: telefono, orden_id: id})
+  });
+  const data = await r.json().catch(() => ({}));
+  boton.disabled = false;
+  boton.textContent = r.ok ? "Quedó en su ficha" : (data.detail || "No se pudo");
+  if (r.ok) pintar();
 }
 
 function lineaSuave(texto) {
@@ -905,6 +969,18 @@ function ficha(caja) {
       if (pide.length) f.appendChild(lineaSuave("El almacén pide: " + pide.join(", ") + "."));
     }
     if (c.pedido) f.appendChild(pedidoDe(c.pedido));
+    if (c.orden && c.orden.lineas) {
+      const h = document.createElement("h3");
+      h.textContent = "Orden";
+      f.appendChild(h);
+      f.appendChild(lineaSuave(c.orden.lineas.map((l) => l.nombre + " x" + l.cantidad).join(", ") + "."));
+      const si = document.createElement("button");
+      si.type = "button";
+      si.className = "grande";
+      si.textContent = "Sí, mándasela";
+      si.onclick = () => aprobarOrden(c.orden.id, si);
+      f.appendChild(si);
+    }
   } else {
     const gustos = (c.interes || "").split(",").map((t) => t.trim()).filter((t) => t && !t.startsWith("No dijo"));
     for (const t of c.favoritos || []) if (t && !gustos.includes(t)) gustos.push(t);
@@ -917,8 +993,11 @@ function ficha(caja) {
   if (c.seguimiento) f.appendChild(lineaSuave(c.seguimiento));
   if (c.ultimo_uso && !String(c.ultimo_uso).startsWith("Todavía")) f.appendChild(lineaSuave("Lo último: " + c.ultimo_uso));
   if (c.formula && c.formula !== "Sin fórmula anotada") f.appendChild(lineaSuave("Fórmula: " + c.formula));
-  if ((c.servicios || []).length) f.appendChild(serviciosDe(c.telefono, c.servicios));
+  if ((c.servicios || []).length) f.appendChild(serviciosDe(c));
   else if (c.rol !== "proveedor") f.appendChild(lineaSuave("Sin servicio pagado."));
+  for (const m of c.margenes || []) {
+    f.appendChild(lineaSuave("Insumos de " + m.servicio + ": " + m.insumos + (m.menu ? ". En el menú está en " + m.menu + "." : ".")));
+  }
   const pres = c.presupuestos || [];
   if (pres.length) {
     const h = document.createElement("h3");
@@ -1282,7 +1361,7 @@ function agenda(caja) {
     if (c.gasto && c.gasto !== "Sin pago registrado") f.appendChild(lineaSuave("La vez pasada: " + c.gasto));
     if (c.ultimo && !String(c.ultimo).startsWith("Todavía")) f.appendChild(lineaSuave("Lo último: " + c.ultimo));
     if (c.formula && c.formula !== "Sin fórmula anotada") f.appendChild(lineaSuave("Fórmula: " + c.formula));
-    if (rolUi === "negocio" && (c.servicios || []).length) f.appendChild(serviciosDe(c.telefono, c.servicios));
+    if (rolUi === "negocio" && (c.servicios || []).length) f.appendChild(serviciosDe(c));
     const volver = document.createElement("button");
     volver.type = "button";
     volver.className = "grande";
@@ -1416,6 +1495,146 @@ function precioDe(p) {
   const costos = [];
   for (const lote of p.lotes || []) if (lote.costo && !costos.includes(lote.costo)) costos.push(lote.costo);
   return costos.length ? costos.join(" · ") : "Sin precio";
+}
+
+function modulos() {
+  return (datos && datos.modulos) || {caja: [], recetas: [], facturas: [], personal: [], ventas: []};
+}
+
+function pesosDe(centavos) {
+  const n = Math.round(Number(centavos) || 0);
+  const signo = n < 0 ? "-" : "";
+  const abs = Math.abs(n);
+  return signo + "$" + Math.floor(abs / 100) + "." + String(abs % 100).padStart(2, "0");
+}
+
+function cajaVista(caja) {
+  const productos = modulos().caja || [];
+  if (!productos.length) {
+    caja.appendChild(lineaSuave("La caja no tiene productos."));
+    return;
+  }
+  for (const p of productos) {
+    const fila = document.createElement("div");
+    fila.className = "fila";
+    const nombre = document.createElement("div");
+    nombre.innerHTML = "<strong>" + p.nombre + "</strong><br><span>" + p.precio + " · quedan " + p.existencia + "</span>";
+    const mas = document.createElement("button");
+    mas.type = "button";
+    mas.textContent = (carrito[p.sku] || 0) ? "×" + carrito[p.sku] : "+";
+    mas.onclick = () => {
+      if ((carrito[p.sku] || 0) >= p.existencia) return;
+      carrito[p.sku] = (carrito[p.sku] || 0) + 1;
+      dibujar();
+    };
+    fila.append(nombre, mas);
+    caja.appendChild(fila);
+  }
+  const total = productos.reduce((suma, p) => suma + (carrito[p.sku] || 0) * p.precio_centavos, 0);
+  const pie = document.createElement("p");
+  pie.className = "alerta";
+  pie.textContent = "Total " + pesosDe(total);
+  caja.appendChild(pie);
+  const efectivo = document.createElement("button");
+  efectivo.type = "button";
+  efectivo.className = "ancho";
+  efectivo.textContent = "Cobrar en efectivo";
+  efectivo.onclick = cobrarCaja;
+  const codi = document.createElement("button");
+  codi.type = "button";
+  codi.className = "ancho";
+  codi.textContent = "Cobrar con CoDi";
+  codi.onclick = () => empujar({vista: "banco", nombre: "Banco"});
+  caja.append(efectivo, codi);
+  caja.appendChild(lineaSuave("CoDi se confirma en Banco. Aquí no se marca pagado."));
+}
+
+async function cobrarCaja() {
+  const lineas = Object.entries(carrito).filter(([, n]) => n > 0).map(([sku, cantidad]) => ({sku, cantidad}));
+  if (!lineas.length) return;
+  const r = await fetch("/api/venta?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({telefono10: telefono, lineas})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    alert(data.detail || "No se pudo cobrar.");
+    return;
+  }
+  carrito = {};
+  await pintar();
+  alert("Venta registrada: " + data.total);
+}
+
+function pedidosVista(caja) {
+  const citas = (datos && datos.citas) || [];
+  const compras = ((datos && datos.chats) || []).filter((c) => c.pedido);
+  if (!citas.length && !compras.length) {
+    caja.appendChild(lineaSuave("No hay pedidos."));
+    return;
+  }
+  for (const c of citas) {
+    caja.appendChild(lineaSuave((c.quien || "Pedido") + " · " + (c.inicio || "") + " · " + (c.estado || "")));
+  }
+  for (const c of compras) {
+    caja.appendChild(lineaSuave(c.nombre + " · " + (c.pedido.cuando || "")));
+  }
+}
+
+function recetasVista(caja) {
+  const recetas = modulos().recetas || [];
+  if (!recetas.length) {
+    caja.appendChild(lineaSuave("No hay recetas."));
+    return;
+  }
+  for (const r of recetas) {
+    const texto = r.servicio + ": " + r.insumos.map((i) => i.nombre + " ×" + i.cantidad).join(", ");
+    caja.appendChild(lineaSuave(texto));
+  }
+  caja.appendChild(lineaSuave("La receta baja el anaquel cuando el servicio ya quedó, no cuando se cobra."));
+}
+
+function dineroVista(caja) {
+  lista(caja, [["Cobrado", datos.mes.cobrado],["Apartado SAT", datos.mes.apartado],["Puedes usar", datos.mes.disponible]], "");
+  const titulo = document.createElement("p");
+  titulo.className = "grupo";
+  titulo.textContent = "Ventas";
+  caja.appendChild(titulo);
+  ventasVista(caja);
+}
+
+function perfilVista(caja) {
+  const quien = (datos && datos.quien) || {};
+  caja.appendChild(lineaSuave((quien.nombre || "Tu cuenta") + " · " + (quien.rol || "")));
+  const titulo = document.createElement("p");
+  titulo.className = "grupo";
+  titulo.textContent = "Personal";
+  caja.appendChild(titulo);
+  personalVista(caja);
+  const seguridad = document.createElement("button");
+  seguridad.type = "button";
+  seguridad.className = "ancho";
+  seguridad.textContent = "Seguridad";
+  seguridad.onclick = () => empujar({vista: "seguridad", nombre: "Seguridad"});
+  caja.appendChild(seguridad);
+}
+
+function ventasVista(caja) {
+  const propias = (modulos().ventas || []).map((v) => [v.concepto + " · " + v.metodo, v.total]);
+  const cobros = ((datos && datos.cobros) || []).filter((c) => c.estado === "pagado").map((c) => [c.concepto, c.monto]);
+  lista(caja, [...propias, ...cobros], "Aún no hay ventas.");
+}
+
+function facturasVista(caja) {
+  const filas = (modulos().facturas || []).map((f) => [f.folio, f.estado]);
+  lista(caja, filas, "No hay facturas. El timbrado sigue simulado.");
+}
+
+function personalVista(caja) {
+  const gente = (modulos().personal || []).map((p) => [p.nombre, p.rol]);
+  lista(caja, gente, "Aún no hay personal.");
+  caja.appendChild(lineaSuave("El personal ve cantidades. No ve costos ni finanzas."));
 }
 
 function almacenVista(caja) {

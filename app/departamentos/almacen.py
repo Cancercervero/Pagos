@@ -67,9 +67,11 @@ def por_surtir() -> str:
 
 
 def salida_por_cotizacion(conn, cot: dict) -> list[str]:
-    """Descuenta stock una sola vez por cotización. La llama el pago ya confirmado."""
+    """El pago de un producto de tienda baja el stock. Un servicio no: eso lo hace la receta."""
     avisos = []
     for partida in json.loads(cot["partidas_json"]):
+        if (partida.get("giro") or "servicios") != "bienes":
+            continue
         sku = str(partida.get("servicio_id") or "").lower()
         producto = conn.execute("SELECT * FROM productos WHERE sku=?", (sku,)).fetchone()
         if not producto:
@@ -89,6 +91,107 @@ def salida_por_cotizacion(conn, cot: dict) -> list[str]:
         if nueva <= int(producto["minimo"]):
             avisos.append(f"Hay que surtir {producto['nombre']}: quedan {nueva}.")
     return avisos
+
+
+def atender_servicio(contacto_id: int, servicio_id: str) -> dict:
+    """Descuenta la receta una sola vez. El segundo aviso no vuelve a bajar el anaquel."""
+    servicio_id = (servicio_id or "").strip().lower()
+    with transaccion() as conn:
+        ya = conn.execute(
+            "SELECT id FROM atendidos WHERE contacto_id=? AND servicio_id=?",
+            (contacto_id, servicio_id),
+        ).fetchone()
+        if ya:
+            return {"ya": True, "texto": "Ese servicio ya se había atendido. El almacén no se volvió a mover."}
+        lineas = conn.execute(
+            """SELECT p.id, p.nombre, p.minimo, r.cantidad
+               FROM recetas r JOIN productos p ON p.id=r.producto_id
+               WHERE r.servicio_id=?""",
+            (servicio_id,),
+        ).fetchall()
+        if not lineas:
+            raise ValueError("Ese servicio no tiene receta.")
+        marca = conn.execute("SELECT COALESCE(MAX(id), 0) AS m FROM movimientos_almacen").fetchone()["m"]
+        faltantes = []
+        for linea in lineas:
+            hay = int(conn.execute("SELECT existencia FROM productos WHERE id=?", (linea["id"],)).fetchone()["existencia"])
+            if hay < int(linea["cantidad"]):
+                faltantes.append(linea["nombre"])
+            _consumir_lotes(conn, int(linea["id"]), int(linea["cantidad"]), None, f"receta {servicio_id}")
+        costo = 0
+        for row in conn.execute(
+            """SELECT cantidad, costo_centavos FROM movimientos_almacen
+               WHERE id>? AND tipo='salida' AND costo_centavos IS NOT NULL""",
+            (marca,),
+        ):
+            costo += int(row["cantidad"]) * int(row["costo_centavos"])
+        conn.execute(
+            """INSERT INTO atendidos (contacto_id, servicio_id, costo_centavos, creado_en)
+               VALUES (?, ?, ?, ?)""",
+            (contacto_id, servicio_id, costo, ahora_iso()),
+        )
+        proponer_orden(conn)
+    texto = f"Listo. La receta de {servicio_id} bajó del anaquel."
+    if faltantes:
+        texto += " No había suficiente " + ", ".join(faltantes) + "."
+    return {"ya": False, "texto": texto, "costo_centavos": costo}
+
+
+def proponer_orden(conn) -> None:
+    """Si algo que surte el proveedor está bajo el mínimo, deja una orden por aprobar."""
+    prov = conn.execute("SELECT id FROM contactos WHERE rol='proveedor' ORDER BY id LIMIT 1").fetchone()
+    if not prov:
+        return
+    bajos = conn.execute(
+        """SELECT p.id, p.existencia, p.minimo
+           FROM surte s JOIN productos p ON p.id=s.producto_id
+           WHERE s.contacto_id=? AND p.existencia<=p.minimo""",
+        (prov["id"],),
+    ).fetchall()
+    if not bajos:
+        return
+    orden = conn.execute(
+        "SELECT id FROM ordenes_compra WHERE contacto_id=? AND estado='propuesta'",
+        (prov["id"],),
+    ).fetchone()
+    if orden:
+        orden_id = orden["id"]
+        conn.execute("DELETE FROM orden_lineas WHERE orden_id=?", (orden_id,))
+    else:
+        cur = conn.execute(
+            "INSERT INTO ordenes_compra (contacto_id, estado, creado_en) VALUES (?, 'propuesta', ?)",
+            (prov["id"], ahora_iso()),
+        )
+        orden_id = cur.lastrowid
+    for bajo in bajos:
+        cant = max(int(bajo["minimo"]) - int(bajo["existencia"]), 1)
+        conn.execute(
+            "INSERT INTO orden_lineas (orden_id, producto_id, cantidad) VALUES (?, ?, ?)",
+            (orden_id, bajo["id"], cant),
+        )
+
+
+def aprobar_orden(orden_id: int) -> str:
+    with transaccion() as conn:
+        orden = conn.execute("SELECT * FROM ordenes_compra WHERE id=?", (orden_id,)).fetchone()
+        if not orden:
+            raise ValueError("No está esa orden.")
+        if orden["estado"] != "propuesta":
+            raise ValueError("Esa orden ya se mandó.")
+        lineas = conn.execute(
+            """SELECT p.nombre, l.cantidad FROM orden_lineas l
+               JOIN productos p ON p.id=l.producto_id WHERE l.orden_id=? ORDER BY p.nombre""",
+            (orden_id,),
+        ).fetchall()
+        if not lineas:
+            raise ValueError("La orden no trae materiales.")
+        texto = "Pedido: " + ", ".join(f"{r['nombre']} x{int(r['cantidad'])}" for r in lineas) + "."
+        conn.execute("UPDATE ordenes_compra SET estado='enviada' WHERE id=?", (orden_id,))
+        conn.execute(
+            "INSERT INTO mensajes (contacto_id, rol, contenido, hilo, creado_en) VALUES (?, 'dueno', ?, 'estetica', ?)",
+            (orden["contacto_id"], texto, ahora_iso()),
+        )
+    return texto
 
 
 def costo_de_salida(conn, cotizacion_id: int) -> int:
@@ -160,6 +263,41 @@ def _lotes_de(conn, producto_id: int) -> list:
             (producto_id,),
         ).fetchall()
     )
+
+
+def vender_en_caja(lineas: list[dict]) -> dict:
+    """Venta de mostrador en efectivo. El precio sale del anaquel. CoDi no se marca aquí."""
+    if not lineas:
+        raise ValueError("El carrito está vacío.")
+    with transaccion() as conn:
+        total = 0
+        armadas = []
+        for linea in lineas:
+            sku = str(linea.get("sku") or "").strip().lower()
+            cantidad = int(linea.get("cantidad") or 0)
+            if cantidad < 1:
+                raise ValueError("La cantidad tiene que ser al menos 1.")
+            producto = conn.execute("SELECT * FROM productos WHERE sku=?", (sku,)).fetchone()
+            if not producto:
+                raise ValueError("No está ese producto.")
+            if int(producto["existencia"]) < cantidad:
+                raise ValueError(f"No hay suficiente {producto['nombre']}.")
+            precio = int(producto["precio_centavos"])
+            total += precio * cantidad
+            armadas.append((producto, cantidad, precio))
+        cur = conn.execute(
+            "INSERT INTO ventas (total_centavos, metodo, concepto, creado_en) VALUES (?, 'efectivo', ?, ?)",
+            (total, "Venta en caja", ahora_iso()),
+        )
+        venta_id = cur.lastrowid
+        for producto, cantidad, precio in armadas:
+            conn.execute(
+                """INSERT INTO venta_lineas (venta_id, producto_id, cantidad, precio_centavos)
+                   VALUES (?, ?, ?, ?)""",
+                (venta_id, producto["id"], cantidad, precio),
+            )
+            _consumir_lotes(conn, int(producto["id"]), cantidad, None, f"caja {venta_id}")
+    return {"ok": True, "total": fmt_mxn(total)}
 
 
 def ajustar(sku: str, delta: int) -> str:

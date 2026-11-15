@@ -97,6 +97,7 @@ def foto(telefono10: str | None, hilo: str | None = None, con: str | None = None
             ).fetchone()
             ultimo = row["contenido"] if row else ""
         agenda = _agenda(conn)
+        modulos = _modulos_negocio(conn)
     seccion, tabla = _seccion(ultimo, (contacto or {}).get("rol"))
     pendiente = next((c for c in cobros if c["estado"] == "pendiente" and c["metodo"] == "simulacion"), None)
     mes = resumen("mes")
@@ -115,6 +116,7 @@ def foto(telefono10: str | None, hilo: str | None = None, con: str | None = None
             for c in citas
         ],
         "agenda": agenda,
+        "modulos": modulos,
         "resenas_publicas": lugares_resena(),
         "cobros": [
             {
@@ -342,6 +344,54 @@ def _ritmo_gasto(conn, contacto_id: int, propio: int) -> str:
     return "Gasta como los demás"
 
 
+def _modulos_negocio(conn) -> dict:
+    caja = [
+        {
+            "sku": p["sku"],
+            "nombre": p["nombre"],
+            "precio": fmt_mxn(p["precio_centavos"]),
+            "precio_centavos": int(p["precio_centavos"]),
+            "existencia": int(p["existencia"]),
+        }
+        for p in conn.execute(
+            "SELECT sku, nombre, precio_centavos, existencia FROM productos ORDER BY nombre"
+        )
+    ]
+    grupos: dict[str, list] = {}
+    for r in conn.execute(
+        """SELECT r.servicio_id, p.nombre, r.cantidad
+           FROM recetas r JOIN productos p ON p.id=r.producto_id
+           ORDER BY r.servicio_id, p.nombre"""
+    ):
+        grupos.setdefault(r["servicio_id"], []).append(
+            {"nombre": r["nombre"], "cantidad": int(r["cantidad"])}
+        )
+    facturas = [
+        {"folio": f"{r['serie']}-{r['folio']}", "estado": r["estado"]}
+        for r in conn.execute("SELECT serie, folio, estado FROM facturas ORDER BY id DESC LIMIT 12")
+    ]
+    personal = [
+        {"nombre": r["nombre"] or r["telefono10"], "rol": r["rol"]}
+        for r in conn.execute(
+            """SELECT nombre, telefono10, rol FROM contactos
+               WHERE rol IN ('dueno', 'staff', 'empleado') ORDER BY nombre"""
+        )
+    ]
+    ventas = [
+        {"concepto": r["concepto"], "total": fmt_mxn(r["total_centavos"]), "metodo": r["metodo"]}
+        for r in conn.execute(
+            "SELECT concepto, total_centavos, metodo FROM ventas ORDER BY id DESC LIMIT 12"
+        )
+    ]
+    return {
+        "caja": caja,
+        "recetas": [{"servicio": servicio, "insumos": insumos} for servicio, insumos in grupos.items()],
+        "facturas": facturas,
+        "personal": personal,
+        "ventas": ventas,
+    }
+
+
 def _almacen(conn) -> list[dict]:
     productos = filas(
         conn.execute(
@@ -394,6 +444,26 @@ def _surte(conn, contacto_id: int) -> list[dict]:
         }
         for r in rows
     ]
+
+
+def _orden_abierta(conn, contacto_id: int) -> dict | None:
+    orden = conn.execute(
+        "SELECT id, estado FROM ordenes_compra WHERE contacto_id=? AND estado='propuesta' ORDER BY id DESC LIMIT 1",
+        (contacto_id,),
+    ).fetchone()
+    if not orden:
+        return None
+    lineas = [
+        {"nombre": r["nombre"], "cantidad": int(r["cantidad"])}
+        for r in conn.execute(
+            """SELECT p.nombre, l.cantidad FROM orden_lineas l
+               JOIN productos p ON p.id=l.producto_id WHERE l.orden_id=? ORDER BY p.nombre""",
+            (orden["id"],),
+        )
+    ]
+    if not lineas:
+        return None
+    return {"id": orden["id"], "lineas": lineas}
 
 
 def _pedido(conn, contacto_id: int, mensaje: str, surte: list[dict]) -> dict:
@@ -503,11 +573,22 @@ def _fila_chat(conn, contacto: dict, nombre: str) -> dict:
     ficha["favoritos"] = [s["nombre"] for s in mem["servicios"] if s["favorito"]]
     ficha["formula"] = mem["formula"]
     ficha["rol"] = contacto.get("rol") or "cliente"
+    hechos = conn.execute(
+        "SELECT servicio_id, costo_centavos FROM atendidos WHERE contacto_id=?",
+        (contacto["id"],),
+    ).fetchall()
+    ficha["atendidos"] = [r["servicio_id"] for r in hechos]
+    precios = {s["id"]: fmt_mxn(int(round(float(s["precio"]) * 100))) for s in catalogo().get("servicios", [])}
+    ficha["margenes"] = [
+        {"servicio": r["servicio_id"], "insumos": fmt_mxn(r["costo_centavos"]), "menu": precios.get(r["servicio_id"], "")}
+        for r in hechos
+    ]
     if ficha["rol"] == "proveedor":
         ficha["seguimiento"] = ""
         ficha["sugerencias"] = []
         ficha["surte"] = _surte(conn, contacto["id"])
         ficha["pedido"] = _pedido(conn, contacto["id"], ficha["pidio"], ficha["surte"])
+        ficha["orden"] = _orden_abierta(conn, contacto["id"])
         ficha["alerta"] = ficha["alerta"].replace("Te escribió. Contéstale.", "El proveedor escribió. Revísalo.")
     return ficha
 

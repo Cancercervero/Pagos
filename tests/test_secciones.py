@@ -27,6 +27,16 @@ def test_almacen_baja_una_sola_vez():
         row = dict(conn.execute("SELECT * FROM cotizaciones WHERE id=?", (cot["id"],)).fetchone())
         almacen.salida_por_cotizacion(conn, row)
         almacen.salida_por_cotizacion(conn, row)
+        pid = conn.execute("SELECT id FROM productos WHERE sku='tinte'").fetchone()["id"]
+        conn.execute(
+            "INSERT INTO recetas (servicio_id, producto_id, cantidad) VALUES ('tinte', ?, 1)",
+            (pid,),
+        )
+    assert "Tinte: 2" in almacen.existencias()
+    uno = almacen.atender_servicio(contacto["id"], "tinte")
+    dos = almacen.atender_servicio(contacto["id"], "tinte")
+    assert uno["ya"] is False
+    assert dos["ya"] is True
     assert "Tinte: 1" in almacen.existencias()
     assert "quedan 1" in almacen.por_surtir()
 
@@ -102,6 +112,30 @@ def test_una_frase_una_seccion():
     alta = asyncio.run(responder("factura shampoo 4 piezas a 35", dueno))
     assert "Quedan 4" in alta
     assert "dueño" in dueno["rol"] or dueno["rol"] == "dueno"
+
+
+def test_caja_guarda_en_sqlite(client):
+    from app.db import conectar
+    from app.personas import obtener_o_crear
+
+    obtener_o_crear("5511111111", nombre="Dueña")
+    from app.departamentos import almacen
+
+    almacen.cargar_entrada("tinte", "Tinte", 3, 80)
+    with conectar() as conn:
+        conn.execute("UPDATE productos SET precio_centavos=2500 WHERE sku='tinte'")
+    tablero = client.get("/api/tablero", params={"k": "k-test", "telefono": "5511111111"})
+    assert tablero.status_code == 200
+    assert any(p["sku"] == "tinte" for p in tablero.json()["modulos"]["caja"])
+    venta = client.post(
+        "/api/venta",
+        params={"k": "k-test"},
+        json={"telefono10": "5511111111", "lineas": [{"sku": "tinte", "cantidad": 1}]},
+    )
+    assert venta.status_code == 200
+    with conectar() as conn:
+        queda = conn.execute("SELECT existencia FROM productos WHERE sku='tinte'").fetchone()["existencia"]
+    assert queda == 2
 
 
 def test_cliente_no_carga_factura():

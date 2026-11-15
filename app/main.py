@@ -73,6 +73,27 @@ class AjusteIn(BaseModel):
     delta: int
 
 
+class AtenderIn(BaseModel):
+    desde: str
+    para: str
+    servicio: str
+
+
+class OrdenIn(BaseModel):
+    telefono10: str
+    orden_id: int
+
+
+class LineaVenta(BaseModel):
+    sku: str
+    cantidad: int
+
+
+class VentaIn(BaseModel):
+    telefono10: str
+    lineas: list[LineaVenta]
+
+
 class BancoIn(BaseModel):
     cobro_id: int
 
@@ -210,6 +231,76 @@ async def guardar_formula(body: FormulaIn, k: str | None = Query(None)):
     with transaccion() as conn:
         conn.execute("UPDATE contactos SET formula=? WHERE id=?", (texto[:240], contacto["id"]))
     return {"ok": True}
+
+
+@app.post("/api/servicio-atendido")
+async def servicio_atendido(body: AtenderIn, k: str | None = Query(None)):
+    """El servicio pagado baja la receta. Cobrar no mueve el almacén."""
+    _llave(k)
+    try:
+        desde = a_telefono10(body.desde)
+        para = a_telefono10(body.para)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if desde not in owner_phones():
+        raise HTTPException(403, "Solo el negocio marca un servicio atendido.")
+    contacto = obtener_o_crear(para)
+    servicio = (body.servicio or "").strip().lower()
+    from app.config import catalogo
+
+    nombre = next((s["nombre"] for s in catalogo().get("servicios", []) if s["id"] == servicio), "")
+    if not nombre:
+        raise HTTPException(400, "No tengo ese servicio.")
+    with conectar() as conn:
+        pago = conn.execute(
+            "SELECT id FROM consumos WHERE contacto_id=? AND descripcion=? LIMIT 1",
+            (contacto["id"], nombre),
+        ).fetchone()
+    if not pago:
+        raise HTTPException(400, "Ese servicio no está en lo que ya pagó.")
+    from app.departamentos.almacen import atender_servicio
+
+    try:
+        return atender_servicio(contacto["id"], servicio)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/api/venta")
+async def venta_caja(body: VentaIn, k: str | None = Query(None)):
+    """Venta en efectivo. El monto lo calcula el anaquel. CoDi sigue en el webhook."""
+    _llave(k)
+    try:
+        telefono = a_telefono10(body.telefono10)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if telefono not in owner_phones():
+        raise HTTPException(403, "Solo el negocio cobra en caja.")
+    from app.departamentos.almacen import vender_en_caja
+
+    try:
+        return vender_en_caja([{"sku": linea.sku, "cantidad": linea.cantidad} for linea in body.lineas])
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+
+
+@app.post("/api/orden/aprobar")
+async def orden_aprobar(body: OrdenIn, k: str | None = Query(None)):
+    """La dueña dice sí y el pedido queda en la ficha del proveedor."""
+    _llave(k)
+    try:
+        telefono = a_telefono10(body.telefono10)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if telefono not in owner_phones():
+        raise HTTPException(403, "Solo el negocio aprueba la orden.")
+    from app.departamentos.almacen import aprobar_orden
+
+    try:
+        texto = aprobar_orden(int(body.orden_id))
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"ok": True, "nota": texto + " Quedó en su ficha. Meta no tiene las llaves, así que no salió al teléfono."}
 
 
 @app.post("/api/almacen/ajustar")

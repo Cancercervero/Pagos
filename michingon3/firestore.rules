@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to read and write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Helper function to get user's businessId
+    function getUserBusinessId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.businessId;
+    }
+    
+    // Users can only access businesses they own (or demo for fallback)
+    match /businesses/{businessId}/{document=**} {
+      allow read, write: if request.auth != null 
+        && (businessId == getUserBusinessId() || businessId == 'demo');
+    }
+  }
+}

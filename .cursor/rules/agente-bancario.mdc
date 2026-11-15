@@ -1,22 +1,19 @@
 ---
-description: Reglas del proyecto Agente Bancario por WhatsApp (Cursor Hackatón México, pey/CoDi)
+description: Reglas de Anillo (agente bancario, Cursor Hackatón México, pey/CoDi)
 alwaysApply: true
 ---
 
 # Reglas del proyecto
 
-- La fuente de verdad es `INSTRUCCIONES.md`. Para la API de pey, `docs/pey_openapi.json`. No inventes endpoints ni campos.
-- Stack: Python 3.11+, FastAPI, SQLite, httpx, cliente `openai` compatible (LLM por entorno). Sin frameworks de frontend.
-- Los montos van en **centavos (int)** en la base de datos. Solo se convierten a pesos al llamar a pey o al mostrarlos.
-- **Solo el webhook firmado de pey** (o la reconciliación con `GET /transaction/{id}`) puede marcar algo como pagado. El LLM nunca decide pagos ni calcula montos.
-- Webhooks:
-  - Verificar la firma sobre el **cuerpo crudo**.
-  - Deduplicar por `webhook-id` y por `transactionId` (UNIQUE).
-  - Hacer todo en una transacción SQLite.
-  - Responder 200 rápido y mandar los mensajes después del commit.
-- Las tools de dueño validan el rol dentro de la propia tool.
-- Nunca escribas secretos en el código ni en los logs. Todo va por `.env` (ignorado por git).
-- `referencia_cerberus/` es solo referencia: se copia y adapta, nunca se importa.
-- Lo simulado (timbrado CFDI, estimación de impuestos) se rotula como tal en los mensajes y en el panel.
-- Mensajes al usuario: español de México, cortos, estilo WhatsApp, tono cordial y profesional.
-- Trabaja por fases (`PROMPTS.md`). Cada fase termina con sus tests pasando.
+- El prototipo entregado es **Anillo**: Python + FastAPI + SQLite en `app/`, con la app web en `app/web/` y la envoltura Android en `android/`. `README.md` y `ARQUITECTURA.md` son la referencia.
+- `michingon3/` y `referencia_cerberus/` son referencia. No se importan desde `app/`.
+- Para la API de pey, `docs/pey_openapi.json`. No inventes endpoints ni campos.
+- El dinero va en **centavos (int)**. Solo se convierte a pesos al llamar a pey o al mostrar.
+- **Solo el servidor marca un pago** (aviso firmado de pey o `GET /transaction/{id}`). El agente no decide pagos ni calcula montos.
+- Un pago se aplica una sola vez: deduplicar por `webhook-id` y por `transactionId`.
+- No inventes precios ni piezas al cargar inventario: lo que no se lee, no entra.
+- El personal no ve costos, márgenes ni finanzas. El rol se valida en el servidor.
+- Nunca escribas secretos en el código ni en los logs. Todo va en `.env` (ignorado por git).
+- Lo simulado (banco de la mesa, timbrado CFDI, estimación de impuestos) se rotula como tal.
+- Mensajes al usuario: español de México, cortos, cordiales.
+- Cada cambio termina con `python -m pytest tests -q` en verde.

@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donna — Agente de IA para Salones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        oklch(11% 0.012 45);
+  --bg-2:      oklch(15% 0.015 45);
+  --bg-3:      oklch(19% 0.018 45);
+  --border:    oklch(26% 0.022 45);
+  --gold:      oklch(74% 0.17 72);
+  --gold-dim:  oklch(60% 0.13 72);
+  --gold-pale: oklch(88% 0.08 72);
+  --cream:     oklch(91% 0.008 80);
+  --muted:     oklch(58% 0.008 60);
+  --teal:      oklch(70% 0.13 195);
+  --red:       oklch(58% 0.19 22);
+  --r: 6px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 48px;
+  border-bottom: 1px solid transparent;
+  transition: background 0.3s, border-color 0.3s;
+}
+nav.scrolled {
+  background: rgba(17,13,10,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom-color: var(--border);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -0.3px;
+}
+.nav-logo span { color: var(--cream); font-weight: 400; font-style: italic; }
+.nav-cta {
+  background: var(--gold);
+  color: oklch(11% 0.012 45);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.2s, transform 0.15s;
+  text-decoration: none;
+}
+.nav-cta:hover { background: var(--gold-pale); transform: translateY(-1px); }
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 120px 48px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-grid-bg {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.25;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black 20%, transparent 100%);
+}
+.hero-glow {
+  position: absolute; top: 10%; left: 50%;
+  width: 700px; height: 400px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse, oklch(74% 0.17 72 / 0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-inner { position: relative; max-width: 900px; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600; letter-spacing: 2px;
+  color: var(--gold);
+  text-transform: uppercase;
+  border: 1px solid oklch(74% 0.17 72 / 0.3);
+  padding: 5px 14px; border-radius: 100px;
+  margin-bottom: 32px;
+}
+.hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  color: var(--cream);
+  margin-bottom: 24px;
+}
+h1 em {
+  font-style: italic;
+  color: var(--gold);
+}
+.hero-sub {
+  font-size: 18px;
+  color: var(--muted);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 48px;
+  font-weight: 300;
+}
+.hero-sub strong { color: var(--cream); font-weight: 500; }
+.hero-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.btn-primary {
+  background: var(--gold);
+  color: oklch(11% 0.012 45);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600;
+  padding: 15px 32px; border-radius: 100px;
+  border: none; cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-primary:hover { background: var(--gold-pale); transform: translateY(-2px); box-shadow: 0 12px 40px oklch(74% 0.17 72 / 0.25); }
+.btn-secondary {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 15px 24px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-secondary:hover { color: var(--cream); border-color: var(--muted); }
+
+.hero-stat-row {
+  display: flex; gap: 48px; flex-wrap: wrap;
+  margin-top: 72px;
+  padding-top: 48px;
+  border-top: 1px solid var(--border);
+}
+.hero-stat { display: flex; flex-direction: column; gap: 4px; }
+.hero-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 38px; font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.hero-stat-label {
+  font-size: 11px; font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* ── SECTION COMMONS ── */
+section { padding: 100px 48px; }
+.section-tag {
+  font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 16px;
+}
+h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  color: var(--cream);
+  margin-bottom: 16px;
+}
+h2 em { font-style: italic; color: var(--gold); }
+.section-sub {
+  font-size: 17px; color: var(--muted); font-weight: 300;
+  max-width: 520px; line-height: 1.7; margin-bottom: 56px;
+}
+
+/* ── PROBLEMA ── */
+#problema { background: var(--bg); }
+.problema-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-top: 56px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.prob-card {
+  background: var(--bg-2);
+  padding: 36px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s;
+}
+.prob-card:hover { background: var(--bg-3); }
+.prob-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.prob-card:hover::before { opacity: 1; }
+.prob-loss {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px; font-weight: 600;
+  color: var(--red);
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.prob-title {
+  font-size: 15px; font-weight: 600; color: var(--cream);
+  margin-bottom: 8px;
+}
+.prob-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+.total-bar {
+  margin-top: 2px;
+  background: oklch(74% 0.17 72 / 0.06);
+  border: 1px solid oklch(74% 0.17 72 / 0.2);
+  border-radius: 0 0 var(--r) var(--r);
+  padding: 28px 36px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.total-label { font-size: 13px; color: var(--muted); letter-spacing: 0.3px; }
+.total-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px; font-weight: 700;
+  color: var(--gold);
+  letter-spacing: -1px;
+}
+.total-sublabel { font-size: 11px; color: var(--gold-dim); font-weight: 500; }
+
+/* ── QUÉ HACE DONNA ── */
+#donna { background: var(--bg-2); }
+.modules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+.module-card {
+  background: var(--bg);
+  padding: 36px 32px;
+  border-radius: 0;
+  transition: background 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.module-card:hover { background: var(--bg-3); }
+.module-card.featured {
+  background: oklch(74% 0.17 72 / 0.05);
+  grid-column: span 2;
+}
+.module-icon {
+  font-size: 28px; margin-bottom: 18px; display: block;
+}
+.module-name {
+  font-size: 14px; font-weight: 700; letter-spacing: 0.3px;
+  color: var(--cream); margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.module-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+.module-tag {
+  display: inline-block; margin-top: 14px;
+  font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  border: 1px solid oklch(74% 0.17 72 / 0.25);
+  padding: 3px 10px; border-radius: 100px;
+}
+
+/* ── ROI CALCULATOR ── */
+#roi { background: var(--bg); }
+.calc-wrap {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 48px; align-items: start;
+  margin-top: 56px;
+}
+.calc-input-side { display: flex; flex-direction: column; gap: 32px; }
+.calc-field label {
+  display: block;
+  font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 14px;
+}
+.slider-wrap { position: relative; }
+input[type=range] {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer;
+  border: 3px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--gold);
+  transition: transform 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.slider-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 48px; font-weight: 600;
+  color: var(--gold); letter-spacing: -2px;
+  margin-bottom: 8px; line-height: 1;
+}
+.slider-hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+.calc-result-side {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 40px;
+  position: sticky; top: 100px;
+}
+.result-tier {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid oklch(74% 0.17 72 / 0.3);
+  display: inline-block;
+  padding: 4px 12px; border-radius: 100px;
+  margin-bottom: 28px;
+}
+.result-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.result-row:last-of-type { border-bottom: none; }
+.result-key { font-size: 13px; color: var(--muted); }
+.result-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px; font-weight: 600;
+  color: var(--cream);
+}
+.result-val.positive { color: var(--teal); }
+.result-val.cost { color: var(--muted); }
+.result-roi-box {
+  margin-top: 28px;
+  background: oklch(74% 0.17 72 / 0.08);
+  border: 1px solid oklch(74% 0.17 72 / 0.25);
+  border-radius: 5px;
+  padding: 24px;
+  text-align: center;
+}
+.roi-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 8px; }
+.roi-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 52px; font-weight: 700;
+  color: var(--gold); letter-spacing: -2px;
+  line-height: 1;
+}
+.roi-sublabel { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+/* ── TIERS ── */
+#tiers { background: var(--bg-2); }
+.tiers-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px; margin-top: 56px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.tier-card {
+  background: var(--bg);
+  padding: 40px 32px;
+  position: relative;
+  transition: background 0.2s;
+  display: flex; flex-direction: column;
+}
+.tier-card.highlighted {
+  background: oklch(74% 0.17 72 / 0.06);
+}
+.tier-card.highlighted::before {
+  content: 'MÁS POPULAR';
+  position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  background: var(--gold);
+  color: oklch(11% 0.012 45);
+  padding: 4px 14px;
+  border-radius: 0 0 8px 8px;
+}
+.tier-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 8px;
+}
+.tier-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 700;
+  color: var(--cream); margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+.tier-profile { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+.tier-setup {
+  font-size: 12px; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 6px;
+}
+.tier-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 40px; font-weight: 700;
+  color: var(--gold); letter-spacing: -1.5px; line-height: 1;
+  margin-bottom: 4px;
+}
+.tier-period { font-size: 12px; color: var(--muted); margin-bottom: 28px; }
+.tier-features { list-style: none; flex: 1; }
+.tier-features li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; color: var(--muted);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tier-features li:last-child { border-bottom: none; }
+.tier-features li.on { color: var(--cream); }
+.tier-features li::before {
+  content: '—';
+  color: var(--border);
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.tier-features li.on::before {
+  content: '✓';
+  color: var(--gold);
+}
+.tier-btn {
+  margin-top: 28px;
+  display: block; text-align: center;
+  padding: 13px; border-radius: 5px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: transparent;
+}
+.tier-card.highlighted .tier-btn {
+  background: var(--gold);
+  color: oklch(11% 0.012 45);
+  border-color: transparent;
+}
+.tier-card.highlighted .tier-btn:hover {
+  background: var(--gold-pale);
+  transform: translateY(-1px);
+}
+.tier-btn:hover { border-color: var(--muted); color: var(--cream); }
+
+/* ── COMPARATIVA ── */
+#comparativa { background: var(--bg); }
+.comp-table {
+  width: 100%; border-collapse: collapse;
+  margin-top: 56px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.comp-table th, .comp-table td {
+  padding: 16px 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.comp-table th {
+  background: var(--bg-2);
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted);
+}
+.comp-table th:first-child, .comp-table td:first-child {
+  text-align: left;
+}
+.comp-table td { color: var(--muted); }
+.comp-table tr.donna td {
+  background: oklch(74% 0.17 72 / 0.05);
+  color: var(--cream);
+  font-weight: 500;
+}
+.comp-table tr.donna td:first-child {
+  color: var(--gold);
+  font-weight: 700;
+}
+.check { color: var(--teal); font-size: 16px; }
+.cross { color: var(--border); font-size: 16px; }
+.comp-table td:last-child { color: var(--cream); }
+.comp-table tr:last-child td { border-bottom: none; }
+
+/* ── SETUP ── */
+#setup { background: var(--bg-2); }
+.setup-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 2px; margin-top: 56px;
+  border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden;
+}
+.setup-item {
+  background: var(--bg);
+  padding: 28px 32px;
+  display: flex; gap: 18px; align-items: flex-start;
+}
+.setup-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600;
+  color: var(--gold-dim); flex-shrink: 0; margin-top: 3px;
+}
+.setup-text-title { font-size: 14px; font-weight: 600; color: var(--cream); margin-bottom: 4px; }
+.setup-text-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* ── CTA ── */
+#cta {
+  background: var(--bg);
+  text-align: center;
+  padding: 120px 48px;
+  position: relative; overflow: hidden;
+}
+.cta-glow {
+  position: absolute; top: 50%; left: 50%;
+  width: 600px; height: 300px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse, oklch(74% 0.17 72 / 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+#cta h2 { margin: 0 auto 20px; max-width: 700px; }
+#cta .section-sub { margin: 0 auto 40px; text-align: center; }
+.cta-note { font-size: 12px; color: var(--muted); margin-top: 20px; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--bg-2);
+  border-top: 1px solid var(--border);
+  padding: 32px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 16px;
+}
+.footer-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 700; color: var(--gold);
+}
+.footer-copy { font-size: 12px; color: var(--muted); }
+
+/* ── REVEAL ANIMATIONS ── */
+.reveal {
+  opacity: 0; transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  section { padding: 72px 24px; }
+  #hero { padding: 100px 24px 60px; }
+  .problema-layout, .modules-grid, .tiers-grid { grid-template-columns: 1fr; }
+  .module-card.featured { grid-column: span 1; }
+  .calc-wrap { grid-template-columns: 1fr; }
+  .setup-grid { grid-template-columns: 1fr; }
+  footer { flex-direction: column; text-align: center; }
+  .hero-stat-row { gap: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">Donna <span>by Cerberus</span></div>
+  <a href="#cta" class="nav-cta">Agenda tu demo</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Agente de IA para Salones de Belleza</div>
+    <h1>Tu salón pierde<br><em>$26,500 al mes.</em><br>Donna lo recupera.</h1>
+    <p class="hero-sub">
+      Sistema multi-agente que opera <strong>100% por WhatsApp</strong> — sin apps, sin capacitación, sin cambiar ningún hábito.
+      Inventario, costeo, compras y clientes: automatizados desde el primer día.
+    </p>
+    <div class="hero-actions">
+      <a href="#cta" class="btn-primary">Agenda tu demo gratis</a>
+      <a href="#roi" class="btn-secondary">Calcula tu ROI →</a>
+    </div>
+    <div class="hero-stat-row">
+      <div class="hero-stat">
+        <div class="hero-stat-num">800%</div>
+        <div class="hero-stat-label">ROI primer mes</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">95 hrs</div>
+        <div class="hero-stat-label">liberadas / mes</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">30 min</div>
+        <div class="hero-stat-label">para empezar</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">24/7</div>
+        <div class="hero-stat-label">sin descansos</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEMA -->
+<section id="problema">
+  <div class="section-tag">El problema</div>
+  <h2>Lo que pierdes cada mes<br><em>sin saberlo.</em></h2>
+  <p class="section-sub">Un salón mediano con 3–5 estilistas pierde en promedio $15,000–26,500 MXN mensuales en costos invisibles y operación descontrolada.</p>
+
+  <div class="problema-layout reveal">
+    <div class="prob-card">
+      <div class="prob-loss">−$3,500/mes</div>
+      <div class="prob-title">Inventario sin control</div>
+      <div class="prob-desc">Compras de emergencia cuando se acaba stock, sobre-compras por falta de historial. Capital inmovilizado en producto que nunca rota.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-loss">−$5,000/mes</div>
+      <div class="prob-title">Servicios mal costeados</div>
+      <div class="prob-desc">Los precios son de hace dos años. Sin recetas documentadas, cada estilista usa cantidades distintas. El margen real es desconocido.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-loss">−$1,000/mes</div>
+      <div class="prob-title">Merma sin trazabilidad</div>
+      <div class="prob-desc">Producto que "desaparece" sin registro. Sin auditoría posible, sin responsabilidad. Pérdidas invisibles que se normalizan.</div>
+    </div>
+    <div class="prob-card">
+      <div class="prob-loss">−$17,000/mes</div>
+      <div class="prob-title">Mano de obra operativa</div>
+      <div class="prob-desc">Una persona dedicada a inventario, pedidos y costeo. 95 horas al mes en tareas que una IA hace en segundos — por el salario de un director.</div>
+    </div>
+  </div>
+  <div class="total-bar reveal">
+    <div>
+      <div class="total-label">Pérdidas evitables estimadas / mes</div>
+      <div class="total-sublabel">Salón mediano · 3–5 estilistas</div>
+    </div>
+    <div style="text-align:right">
+      <div class="total-num">$26,500 MXN</div>
+    </div>
+  </div>
+</section>
+
+<!-- QUÉ HACE DONNA -->
+<section id="donna">
+  <div class="section-tag">La solución</div>
+  <h2>Seis agentes.<br><em>Un solo número de WhatsApp.</em></h2>
+  <p class="section-sub">Donna no es un chatbot. Es un sistema de agentes especializados que trabajan en paralelo, aprenden de tu operación y actúan de forma autónoma.</p>
+
+  <div class="modules-grid reveal">
+    <div class="module-card featured">
+      <span class="module-icon">📦</span>
+      <div class="module-name">Inventario en tiempo real</div>
+      <div class="module-desc">Estilista usa un producto → manda foto → Donna lo descuenta automáticamente. Llegó un pedido → foto de la factura → Donna registra la entrada, archiva el documento y alerta si el proveedor subió precios. Sin formularios. Sin hojas de Excel. Sin errores humanos.</div>
+      <span class="module-tag">Visión IA</span>
+    </div>
+    <div class="module-card">
+      <span class="module-icon">🧪</span>
+      <div class="module-name">Recetas & Costeo</div>
+      <div class="module-desc">Keratina = 150ml A + 50ml B. Donna deduce exactamente lo que dice la receta en cada servicio. Margen real por servicio, en tiempo real.</div>
+      <span class="module-tag">Angélica</span>
+    </div>
+    <div class="module-card">
+      <span class="module-icon">👩‍🦳</span>
+      <div class="module-name">Archivo de Clientas</div>
+      <div class="module-desc">Fórmula personal guardada por cliente. Alerta automática si una clienta lleva 6+ semanas sin visitar. Retención sin esfuerzo.</div>
+      <span class="module-tag">Valentina</span>
+    </div>
+    <div class="module-card">
+      <span class="module-icon">📊</span>
+      <div class="module-name">Inteligencia de Negocio</div>
+      <div class="module-desc">Predicción de agotamiento con 8 días de anticipación. Detección estacional. Alertas de precio: "el shampoo X subió 18%".</div>
+      <span class="module-tag">Isabel + Tomás</span>
+    </div>
+    <div class="module-card">
+      <span class="module-icon">🛒</span>
+      <div class="module-name">Compras Autónomas</div>
+      <div class="module-desc">Detecta qué está por debajo del mínimo. Genera orden de compra y la manda al proveedor vía WhatsApp. Admin aprueba con un tap.</div>
+      <span class="module-tag">Aldo</span>
+    </div>
+    <div class="module-card">
+      <span class="module-icon">📋</span>
+      <div class="module-name">Expediente de Estilistas</div>
+      <div class="module-desc">Cuánto producto gasta cada una, qué servicios hace, cómo evoluciona. Evaluación objetiva sin drama, con datos reales.</div>
+      <span class="module-tag">Operaciones</span>
+    </div>
+  </div>
+</section>
+
+<!-- ROI CALCULATOR -->
+<section id="roi">
+  <div class="section-tag">Calculadora de ROI</div>
+  <h2>¿Cuánto<br><em>recuperas tú?</em></h2>
+  <p class="section-sub">Mueve el slider y ve en tiempo real cuánto deja de perderse tu salón cada mes con Donna activo.</p>
+
+  <div class="calc-wrap">
+    <div class="calc-input-side">
+      <div class="calc-field">
+        <label>Número de estilistas</label>
+        <div class="slider-val" id="slider-display">3</div>
+        <input type="range" min="1" max="20" value="3" id="estilistas-slider">
+        <div class="slider-hint">Desliza para ajustar</div>
+      </div>
+    </div>
+
+    <div class="calc-result-side">
+      <div class="result-tier" id="result-tier">N1 — Independiente</div>
+      <div class="result-row">
+        <span class="result-key">Pérdidas eliminadas / mes</span>
+        <span class="result-val positive" id="r-savings">$8,900</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Costo Donna / mes</span>
+        <span class="result-val cost" id="r-cost">$2,490</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Ganancia neta / mes</span>
+        <span class="result-val positive" id="r-net">$6,410</span>
+      </div>
+      <div class="result-row">
+        <span class="result-key">Payback del setup</span>
+        <span class="result-val" id="r-payback">&lt; 2 meses</span>
+      </div>
+      <div class="result-roi-box">
+        <div class="roi-label">Retorno sobre inversión</div>
+        <div class="roi-number" id="r-roi">257%</div>
+        <div class="roi-sublabel">mensual — desde el primer mes</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIERS -->
+<section id="tiers">
+  <div class="section-tag">Planes</div>
+  <h2>Elige el nivel<br><em>que le corresponde a tu salón.</em></h2>
+  <p class="section-sub">Sin contratos a largo plazo en N1 y N2. Cancela cuando quieras.</p>
+
+  <div class="tiers-grid reveal">
+    <div class="tier-card">
+      <div class="tier-label">N1</div>
+      <div class="tier-name">Independiente</div>
+      <div class="tier-profile">1 sucursal · 1–4 estilistas</div>
+      <div class="tier-setup">Setup único: $8,500 MXN</div>
+      <div class="tier-price">$2,490</div>
+      <div class="tier-period">MXN / mes</div>
+      <ul class="tier-features">
+        <li class="on">Inventario en tiempo real</li>
+        <li class="on">Recetas + costeo</li>
+        <li class="on">Compras autónomas</li>
+        <li class="on">Archivo de clientas</li>
+        <li class="on">Alertas de stock</li>
+        <li class="on">Soporte 15 días post-setup</li>
+        <li>Multi-sucursal</li>
+        <li>Dashboard web</li>
+        <li>Integración POS</li>
+        <li>Gerente de cuenta</li>
+      </ul>
+      <a href="#cta" class="tier-btn">Empezar con N1</a>
+    </div>
+
+    <div class="tier-card highlighted">
+      <div class="tier-label">N2</div>
+      <div class="tier-name">Consolidado</div>
+      <div class="tier-profile">Hasta 3 sucursales · 5–12 estilistas</div>
+      <div class="tier-setup">Setup único: $18,000 MXN</div>
+      <div class="tier-price">$4,990</div>
+      <div class="tier-period">MXN / mes</div>
+      <ul class="tier-features">
+        <li class="on">Todo lo de N1</li>
+        <li class="on">Multi-sucursal</li>
+        <li class="on">Dashboard web para dueña</li>
+        <li class="on">Reportes gerenciales</li>
+        <li class="on">Integración POS</li>
+        <li class="on">Soporte prioritario</li>
+        <li class="on">Historial de proveedores</li>
+        <li class="on">Análisis de comisiones</li>
+        <li>SLA garantizado</li>
+        <li>Gerente de cuenta</li>
+      </ul>
+      <a href="#cta" class="tier-btn">Empezar con N2</a>
+    </div>
+
+    <div class="tier-card">
+      <div class="tier-label">N3</div>
+      <div class="tier-name">Cadena / Franquicia</div>
+      <div class="tier-profile">3+ sucursales · franquicias</div>
+      <div class="tier-setup">Setup desde: $35,000 MXN</div>
+      <div class="tier-price">$9,990</div>
+      <div class="tier-period">MXN / mes</div>
+      <ul class="tier-features">
+        <li class="on">Todo lo de N2</li>
+        <li class="on">SLA garantizado</li>
+        <li class="on">Gerente de cuenta dedicado</li>
+        <li class="on">White-label disponible</li>
+        <li class="on">API propia</li>
+        <li class="on">Consolidado multi-marca</li>
+        <li class="on">Onboarding presencial</li>
+        <li class="on">Reportes ejecutivos PDF</li>
+        <li class="on">Integraciones custom</li>
+        <li class="on">Precio negociable por volumen</li>
+      </ul>
+      <a href="#cta" class="tier-btn">Hablar con ventas</a>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARATIVA -->
+<section id="comparativa">
+  <div class="section-tag">Comparativa</div>
+  <h2>El único que opera<br><em>donde vive tu negocio.</em></h2>
+  <p class="section-sub">Ningún competidor tiene operación nativa en WhatsApp, visión IA y autonomía de compras. Donna no tiene competencia directa.</p>
+
+  <table class="comp-table reveal">
+    <thead>
+      <tr>
+        <th>Sistema</th>
+        <th>Precio/mes</th>
+        <th>WhatsApp</th>
+        <th>Sin app</th>
+        <th>Recetas IA</th>
+        <th>Predictivo</th>
+        <th>Compras auto.</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="donna">
+        <td>Donna by Cerberus</td>
+        <td>$2,490 MXN</td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+      <tr>
+        <td>Mindbody</td>
+        <td>~$2,500 MXN</td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+      <tr>
+        <td>Vagaro</td>
+        <td>~$600 MXN</td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+      <tr>
+        <td>Booksy</td>
+        <td>~$500 MXN</td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+      <tr>
+        <td>Excel + WhatsApp manual</td>
+        <td>$0</td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- SETUP -->
+<section id="setup">
+  <div class="section-tag">Lo que incluye el setup</div>
+  <h2>Operando en<br><em>30 minutos.</em></h2>
+  <p class="section-sub">No necesita técnico. No necesita computadora. No necesita cambiar ningún hábito.</p>
+
+  <div class="setup-grid reveal">
+    <div class="setup-item">
+      <div class="setup-num">01</div>
+      <div>
+        <div class="setup-text-title">Configuración del número WhatsApp</div>
+        <div class="setup-text-desc">Conectamos Donna al número del salón. Puede ser el número actual o uno nuevo dedicado.</div>
+      </div>
+    </div>
+    <div class="setup-item">
+      <div class="setup-num">02</div>
+      <div>
+        <div class="setup-text-title">Importación de inventario inicial</div>
+        <div class="setup-text-desc">Excel, foto, lista de WhatsApp — cualquier formato. Donna los procesa y arma la base desde cero.</div>
+      </div>
+    </div>
+    <div class="setup-item">
+      <div class="setup-num">03</div>
+      <div>
+        <div class="setup-text-title">Configuración de recetas</div>
+        <div class="setup-text-desc">Los servicios principales con sus ingredientes y proporciones. Base para el costeo real desde el día uno.</div>
+      </div>
+    </div>
+    <div class="setup-item">
+      <div class="setup-num">04</div>
+      <div>
+        <div class="setup-text-title">Registro de proveedores</div>
+        <div class="setup-text-desc">Contactos, precios de referencia e historial. Donna negocia con datos desde el primer pedido.</div>
+      </div>
+    </div>
+    <div class="setup-item">
+      <div class="setup-num">05</div>
+      <div>
+        <div class="setup-text-title">Onboarding de 30 minutos</div>
+        <div class="setup-text-desc">Video llamada o video grabado. Las estilistas aprenden a usar Donna mandando una sola foto.</div>
+      </div>
+    </div>
+    <div class="setup-item">
+      <div class="setup-num">06</div>
+      <div>
+        <div class="setup-text-title">15 días de soporte post-lanzamiento</div>
+        <div class="setup-text-desc">Cualquier duda por WhatsApp. Ajustes sin costo en las primeras dos semanas de operación.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-glow"></div>
+  <div class="section-tag" style="text-align:center">Siguiente paso</div>
+  <h2>Donna cuesta menos<br>que <em>un día de trabajo</em><br>de tu encargada.</h2>
+  <p class="section-sub" style="text-align:center">
+    30 minutos de demo. Sin compromiso. Traemos los números reales de tu operación y te mostramos exactamente cuánto recuperas en el primer mes.
+  </p>
+  <a href="mailto:hola@ejemplo.com?subject=Demo Donna" class="btn-primary" style="display:inline-block">Agenda tu demo gratis →</a>
+  <div class="cta-note">Respuesta en menos de 2 horas · Sin contratos forzosos · Setup en el mismo día</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Donna</div>
+  <div class="footer-copy">© 2026</div>
+</footer>
+
+<script>
+// NAV scroll
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// Reveal on scroll
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(el => observer.observe(el));
+
+// ROI Calculator
+const slider = document.getElementById('estilistas-slider');
+const display = document.getElementById('slider-display');
+
+const tiers = [
+  { min: 1, max: 4,  name: 'N1 — Independiente', cost: 2490, setup: 8500 },
+  { min: 5, max: 12, name: 'N2 — Consolidado',   cost: 4990, setup: 18000 },
+  { min: 13, max: 20, name: 'N3 — Cadena',        cost: 9990, setup: 35000 },
+];
+
+function calcROI(n) {
+  const savings = 3500 + (n * 1800);
+  const tier = tiers.find(t => n >= t.min && n <= t.max) || tiers[2];
+  const net = savings - tier.cost;
+  const roi = Math.round((net / tier.cost) * 100);
+  const paybackMonths = (tier.setup / net).toFixed(1);
+  const payback = paybackMonths <= 1 ? '< 1 mes' : paybackMonths <= 2 ? '< 2 meses' : `${paybackMonths} meses`;
+  return { savings, tier, net, roi, payback };
+}
+
+function fmt(n) {
+  return '$' + n.toLocaleString('es-MX') + ' MXN';
+}
+
+function updateCalc(val) {
+  display.textContent = val;
+  const { savings, tier, net, roi, payback } = calcROI(val);
+  document.getElementById('result-tier').textContent = tier.name;
+  document.getElementById('r-savings').textContent = fmt(savings);
+  document.getElementById('r-cost').textContent = fmt(tier.cost);
+  document.getElementById('r-net').textContent = fmt(net);
+  document.getElementById('r-payback').textContent = payback;
+  document.getElementById('r-roi').textContent = roi + '%';
+}
+
+slider.addEventListener('input', e => updateCalc(+e.target.value));
+updateCalc(3);
+
+// Counter animation for hero stats
+function animateCount(el, target, prefix='', suffix='', duration=1500) {
+  const start = performance.now();
+  const update = (time) => {
+    const progress = Math.min((time - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const val = Math.round(ease * target);
+    el.textContent = prefix + val.toLocaleString('es-MX') + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+
+const heroObserver = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    setTimeout(() => animateCount(document.querySelector('.hero-stat-num'), 800, '', '%'), 300);
+    heroObserver.disconnect();
+  }
+}, { threshold: 0.5 });
+heroObserver.observe(document.getElementById('hero'));
+</script>
+</body>
+</html>

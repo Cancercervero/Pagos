@@ -1,12 +1,12 @@
 # Agente Bancario por WhatsApp
 
-Un agente que vive en el WhatsApp de tu negocio: cotiza, agenda, cobra por **CoDi** (vía la API de [pey](https://docs.pey.mx)), confirma pagos en el servidor, concilia, genera facturas en borrador y te dice cómo van tus cuentas.
+Un agente que vive en el WhatsApp de tu negocio: cotiza, agenda, cobra por **CoDi** (vía la API de [pey](https://docs.pey.mx)), confirma pagos en el servidor, concilia, genera facturas en borrador, lleva el **inventario** (recetas por servicio, stock bajo, órdenes de compra a proveedores), el **archivo de clientes** y la **tienda**, y te dice cómo van tus cuentas y tus márgenes.
 
 Proyecto para el **Cursor Hackatón México** (CDMX, noviembre 2026).
 
 ## Recorrido
 
-Cliente cotiza por WhatsApp → elige horario → recibe un cobro CoDi del anticipo en su app bancaria → paga → **el webhook de pey confirma** → la cita se confirma sola, se registra el ingreso y se avisa a ambos → se cobra el saldo → la factura se genera sola.
+Cliente cotiza por WhatsApp → elige horario → recibe un cobro CoDi del anticipo en su app bancaria → paga → **el webhook de pey confirma** → la cita se confirma sola, se registra el ingreso y se avisa a ambos → se cobra el saldo → la factura se genera sola → al atender el servicio se descuentan los insumos de su receta → si algo queda bajo el mínimo, el agente prepara la orden de compra y el dueño la aprueba con un "sí".
 
 ## Real vs simulado
 

@@ -1,0 +1,22 @@
+{
+  "_instrucciones": "Este archivo es generado por onboarding_engine.py. No editar manualmente.",
+  "cliente_id": "",
+  "nombre_empresa": "",
+  "onboarding_completo": false,
+  "alertas": {
+    "stock_minimo_global_pct": 20,
+    "dias_mora_alerta": 5,
+    "pipeline_estancado_dias": 7,
+    "umbral_venta_alta_mxn": 50000
+  },
+  "reportes": {
+    "hora_manana": "07:00",
+    "hora_mediodia": "13:00",
+    "hora_cierre": "19:00"
+  },
+  "canales": {
+    "telegram_admin_ids": [],
+    "whatsapp_admin": "",
+    "portal_token": ""
+  }
+}

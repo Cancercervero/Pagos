@@ -1,0 +1,20 @@
+{
+  "telegram_token": "",
+  "salon_nombre": "Salón",
+  "admin_chat_id": "",
+  "admin_whatsapp": "",
+  "alertas_hora": "09:00",
+  "moneda": "$",
+  "codigo_pais": "52",
+  "setup_token": "",
+  "roles": {
+    "EXAMPLE_CHAT_ID_ADMIN": "admin",
+    "EXAMPLE_CHAT_ID_ESTILISTA": "estilista",
+    "EXAMPLE_CHAT_ID_DUENA": "duena"
+  },
+  "permisos": {
+    "estilista": ["reportar_uso", "consultar_stock"],
+    "admin":     ["reportar_uso", "consultar_stock", "entrada_stock", "registrar_producto", "lista_pedido", "reporte_semana"],
+    "duena":     ["reportar_uso", "consultar_stock", "entrada_stock", "registrar_producto", "lista_pedido", "reporte_semana", "reporte_margen", "reporte_mes"]
+  }
+}

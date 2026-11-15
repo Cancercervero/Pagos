@@ -16,7 +16,8 @@ alwaysApply: true
   - Responder 200 rápido y mandar los mensajes después del commit.
 - Las tools de dueño validan el rol dentro de la propia tool.
 - Nunca escribas secretos en el código ni en los logs. Todo va por `.env` (ignorado por git).
-- `referencia_cerberus/` es solo referencia: se copia y adapta, nunca se importa.
+- `referencia_cerberus/` es solo referencia: se copia y adapta, nunca se importa. El almacén, las recetas, el archivo de clientes, las compras a proveedores, los análisis de margen y el onboarding **ya existen** en `referencia_cerberus/salon_almacen/` y `referencia_cerberus/negocio/`. Pórtalos (sección 13B y tabla 15 de `INSTRUCCIONES.md`), no los reescribas desde cero.
+- El staff (`STAFF_PHONES`) nunca ve costos, márgenes ni finanzas.
 - Lo simulado (timbrado CFDI, estimación de impuestos) se rotula como tal en los mensajes y en el panel.
 - Mensajes al usuario: español de México, cortos, estilo WhatsApp, tono cordial y profesional.
 - Trabaja por fases (`PROMPTS.md`). Cada fase termina con sus tests pasando.

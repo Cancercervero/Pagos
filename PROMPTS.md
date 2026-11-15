@@ -97,11 +97,27 @@ Listo cuando: los pasos 6–8 de la sección 3 funcionan por WhatsApp.
 
 ---
 
+## FASE 5B: almacén, recetas, clientes, compras y tienda (portar Donna). Aprox. 2 h
+
+```
+Implementa la FASE 5B según @INSTRUCCIONES.md secciones 2, 3 (pasos 9–11), 9 (tools de dueño, staff y tienda), 10 y 13B, y la tabla de la sección 15.
+PORTA, no reescribas: el código ya existe en @referencia_cerberus/salon_almacen/ y @referencia_cerberus/negocio/.
+1. app/negocio/almacen_db.py: copia negocio/empire_ledger.py + negocio/almacen_db.py; DB en data/almacen.db; init = EmpireLedger(path) y luego AlmacenDB(path).migrate(). Corre salon_almacen/seed.py adaptado en el arranque si está vacío y agrega una receta por servicio de data/catalogo.json.
+2. app/negocio/enzo.py, recetas.py (+angelica sin fotos), aldo.py (+whatsapp_sender → app/whatsapp.py; sin aldo_scout), valentina.py, analisis.py (isabel+tomas+veronica). Cambia los imports host_engine.* por locales y ask_llm por app/agente/llm.py.
+3. Rol STAFF (STAFF_PHONES) con sus 3 tools, sin acceso a costos ni finanzas. Tools nuevas de dueño y de cliente (tienda) de la sección 9.
+4. Enganches de la sección 13B: servicio_atendido → receta → descuento → visita → margen → stock bajo → orden de compra → aviso al dueño. Pedido de tienda pagado (webhook) → salida de stock → "listo para recoger".
+5. tareas.py: reporte matutino al dueño (reporte de donna) y alerta de stock bajo, una vez por producto al día.
+6. Tests: aplicar receta descuenta lo correcto; servicio_atendido dos veces no descuenta doble; staff no ve costos; pedido de tienda solo descuenta stock tras el pago.
+Listo cuando: los pasos 9 y 10 de la sección 3 funcionan por WhatsApp (descuento de inventario + orden de compra aprobada con "sí" que llega al proveedor), y el panel muestra el stock.
+```
+
+---
+
 ## FASE 6: panel pulido y despliegue. Aprox. 1.5 h
 
 ```
 FASE 6 según @INSTRUCCIONES.md secciones 14 y 18:
-1. Panel: feed de eventos en vivo, tarjetas cobrado / por cobrar / gastos / utilidad, citas de hoy, QR grande para cobro presencial, animación al llegar un pago, etiquetas "simulado" donde aplique. Que se vea bien en un proyector.
+1. Panel: feed de eventos en vivo, tarjetas cobrado / por cobrar / gastos / utilidad, citas de hoy, QR grande para cobro presencial, animación al llegar un pago, **stock con semáforo (bajo mínimo en rojo), órdenes de compra pendientes y margen por servicio**, etiquetas "simulado" donde aplique. Que se vea bien en un proyector.
 2. Seed al arrancar si la base de datos está vacía (catálogo + contacto dueño).
 3. Prepara el despliegue en Render: start command, variables, healthcheck GET /salud.
 4. Revisa que no haya secretos en el repo (busca tokens, CLABEs, teléfonos reales) y que .env esté ignorado.
@@ -116,6 +132,10 @@ Listo cuando: la app vive en una URL pública, ambos webhooks apuntan ahí y el 
 Eres el estratega de producto de un equipo en el Cursor Hackatón México (reto: construir con CoDi usando la API de pey). Te paso el documento maestro del proyecto:
 
 <pega aquí INSTRUCCIONES.md completo>
+
+Y esta es la propuesta comercial del módulo de almacén que ya tenemos (problema, ROI y precios):
+
+<pega aquí referencia_cerberus/salon_almacen/DONNA_PROPUESTA_COMERCIAL.md>
 
 Entrégame:
 1. Pitch de 60 segundos (problema → solución → demo → por qué ahora), en español de México, sin jerga.

@@ -17,7 +17,10 @@
   - video demo (opcional)
   - correos de los integrantes
 - **Riel de pago:** CoDi (Banxico) a través de la API de **pey** (`https://api.pey.mx`). Documentación en `docs.pey.mx`. La especificación completa está en `docs/pey_openapi.json`.
-- **Código previo:** en `referencia_cerberus/` hay módulos de un sistema multiagente anterior (Cerberus). **Son referencia, no dependencia.** No los importes tal cual: dependen de rutas y módulos que no existen aquí. Cópialos y adáptalos al módulo nuevo que corresponda (ver la sección 15).
+- **Código previo:** en `referencia_cerberus/` está lo que ya construimos en Cerberus. **Son referencia, no dependencia.** No los importes tal cual: dependen de rutas y módulos que no existen aquí. Cópialos y adáptalos al módulo nuevo que corresponda (ver la sección 15). Hay tres grupos:
+  - `referencia_cerberus/*.py`: WhatsApp, cotizaciones, citas, cobranza, ventas, CFDI, router y LLM.
+  - `referencia_cerberus/salon_almacen/`: **producto completo "Donna"**, el almacén inteligente para salones operado por WhatsApp/Telegram, con su equipo de agentes: Enzo (almacenista), Angélica y recetas (costeo y fórmulas), Aldo (compras a proveedores), Valentina (archivo de clientas), Isabel (predicción), Tomás (márgenes), Verónica (auditoría), expediente (estilistas), onboarding, ingesta de inventario, seguridad, cron de reportes y envío por WhatsApp. Lee `DONNA_PROPUESTA_COMERCIAL.md`: explica el valor de negocio.
+  - `referencia_cerberus/negocio/`: módulos de negocio de Cerberus. Inventario (`almacen_db`, `empire_ledger`, `almacen_skill`, `almacenista_skill`, `tania_bodeguera_skill`), ventas y CRM (`ventas_skill`, `deal_tracker`, `business_followup`), atención a clientes (`annie_empathy`, `contact_gate`, `lingua_detector`, `annie_reporter`), onboarding del negocio (`onboarding_engine`, `config_cliente_template.json`), alertas (`alerta_imperativa`), manufactura y recetas (`manufactura_db`, `manufactura_skill`), caja y presupuesto (`cajero_ledger`, `budget_sentinel`), pronóstico (`prophet_forecasting`) y control de acceso (`auth_gate`).
 
 ## 1. Reglas del reto (hoja oficial "20 ideas para construir con pey")
 
@@ -50,10 +53,19 @@ Ideas de la hoja que este proyecto cubre en un solo flujo: **#2** pedidos por Wh
 | Libro y gastos | Registra ingresos automáticos (por webhook) y gastos manuales (dueño), y calcula el saldo | Automático, dueño |
 | Impuestos (SAT) | Da una **estimación informativa** de IVA y del ISR RESICO del mes. No es asesoría fiscal | Dueño |
 | Seguimiento | Avisa al cliente y al dueño de cada cambio de estado | Automático |
+| **Almacén / Inventario** (Enzo) | Entradas, salidas, mermas, stock actual y alertas de stock bajo. Descuenta insumos solo cuando se atiende un servicio pagado o se vende un producto | Automático, dueño, staff |
+| **Recetas y costeo** (Angélica + recetas) | Cada servicio tiene su receta de insumos. "Hice un tinte" descuenta todo de una vez. Calcula el costo real por servicio | Automático, dueño |
+| **Compras a proveedores** (Aldo) | Con stock bajo arma la orden de compra; el dueño la aprueba con un "sí" y sale por WhatsApp al proveedor. Al recibirla, registra la entrada y alerta si subió el precio | Dueño |
+| **Tienda** | Venta de productos (shampoo, tratamientos) por WhatsApp: pedido → cobro CoDi → pago confirmado → salida de stock → "listo para recoger". Idea #2 de la hoja | Cliente, dueño |
+| **Archivo de clientes** (Valentina) | Historial de visitas, fórmula personal de cada clienta y clientas inactivas (6+ semanas) para mandarles seguimiento | Automático, dueño |
+| **Análisis y márgenes** (Isabel, Tomás, Verónica) | Días de stock restantes, fechas de agotamiento, margen por servicio y producto, variaciones de precio de proveedor y anomalías de uso | Dueño |
+| **Atención a clientes** (Annie) | Tono cálido y profesional, detección de idioma, filtro de contactos, bitácora de interacciones | Todos |
+| **Onboarding del negocio** | Entrevista por WhatsApp para dar de alta el negocio: nombre, servicios, precios, inventario inicial (Excel, foto o texto), proveedores y staff | Dueño |
 
-### Dos roles por número de teléfono
-- **Dueño:** su teléfono está en `OWNER_PHONES`. Tiene acceso a finanzas, gastos, impuestos, agenda completa, cobro de saldos y cobros libres.
-- **Cliente:** cualquier otro número. Puede ver el catálogo, cotizar, aceptar, elegir horario, pagar, consultar su saldo y pedir que le reenvíen un cobro.
+### Roles por número de teléfono
+- **Dueño:** su teléfono está en `OWNER_PHONES`. Tiene acceso a todo: finanzas, gastos, impuestos, agenda, cobro de saldos y cobros libres, almacén, compras, márgenes y clientes.
+- **Staff** (estilistas o empleados): sus teléfonos están en `STAFF_PHONES`. Pueden reportar uso de insumos ("usé 2 tubos de tinte"), consultar stock y marcar un servicio como atendido. **No ven costos, márgenes ni finanzas** (misma regla de permisos que `salon_almacen/config.json`).
+- **Cliente:** cualquier otro número. Puede ver el catálogo, cotizar, aceptar, elegir horario, comprar productos, pagar, consultar su saldo y pedir que le reenvíen un cobro.
 - **Modo persona** (pitch, prioridad baja): el mismo motor sirve a una persona para cobrar adelantos y gastos compartidos y llevar su control. En código basta con `crear_cobro_libre` + `registrar_gasto` + `resumen_finanzas`.
 
 ## 3. Recorrido de la demo (esto es lo que se debe ver funcionando)
@@ -68,6 +80,11 @@ Participan dos teléfonos: el del **dueño** y el del **cliente**. Ambos escribe
 6. **Dueño:** "Cóbrale el resto a [cliente]" → segundo cobro por el saldo → pago → la cotización queda `liquidada` → se generan el **CFDI borrador** y el PDF, y se envían.
 7. **Dueño:** "¿Cómo voy este mes?" → cobrado, por cobrar, gastos, utilidad y estimación de IVA/ISR (marcada como estimación).
 8. **Dueño:** "Gasté 200 en tinte, proveedor X" → gasto registrado, el resumen se actualiza.
+9. **Staff o dueño:** "Ya quedó el tinte de [cliente]" → se aplica la **receta** del servicio y se descuentan los insumos del almacén (tubo de tinte, guantes, papel aluminio). Valentina registra la visita y la fórmula de la clienta. El margen real del servicio queda en el resumen.
+10. El tinte queda **bajo el mínimo** → alerta al dueño: "Tinte permanente: quedan 2, se acaba en ~4 días. ¿Mando el pedido a Proveedor Salón?" → **Dueño:** "sí" → Aldo genera la orden de compra y la envía al proveedor por WhatsApp.
+11. **(Tienda, si da tiempo) Cliente:** "¿Tienen shampoo matizador?" → precio y stock → "lo quiero" → cobro CoDi → pago confirmado → salida de stock → "Listo para recoger".
+
+Los pasos 9 y 10 son la cadena más fuerte para los jueces: **el pago dispara trabajo real**. Pagado → servicio → inventario → compra al proveedor, todo verificable en el panel.
 
 Montos de la demo: **$1 a $5 MXN reales**, o $0.01 para pruebas. pey no tiene sandbox y recomienda probar en producción con montos pequeños.
 
@@ -103,7 +120,17 @@ agente-bancario/
 │   │   ├── cobranza.py
 │   │   ├── facturas.py
 │   │   ├── libro.py
-│   │   └── impuestos.py
+│   │   ├── impuestos.py
+│   │   └── tienda.py        # pedidos de productos por WhatsApp
+│   ├── negocio/             # adaptado de referencia_cerberus/salon_almacen + negocio/
+│   │   ├── almacen_db.py    # AlmacenDB + EmpireLedger (mismo SQLite: data/almacen.db)
+│   │   ├── enzo.py          # inventario: uso, entradas, mermas, stock bajo
+│   │   ├── recetas.py       # recetas de servicio + costeo (Angélica)
+│   │   ├── aldo.py          # órdenes de compra a proveedores
+│   │   ├── valentina.py     # archivo de clientas, fórmulas, inactivas
+│   │   ├── analisis.py      # Isabel + Tomás + Verónica (predicción, márgenes, auditoría)
+│   │   ├── atencion.py      # tono Annie, idioma, filtro de contactos
+│   │   └── onboarding.py    # alta del negocio por WhatsApp
 │   └── web/
 │       ├── panel.html       # panel en vivo del dueño
 │       └── demo.html        # chat simulador (respaldo si WhatsApp falla)
@@ -401,6 +428,28 @@ Dueño (todas las de cliente, más):
 | `estimar_impuestos` | `mes?` | IVA e ISR RESICO estimados |
 | `generar_factura` | `folio` | Fuerza la factura borrador si está liquidada |
 | `registrar_devolucion` | `pago_id, monto, motivo` | Movimiento `devolucion` (ver la sección 10) |
+| `estado_almacen` | `categoria?` | Stock actual por producto, con los que están bajo el mínimo marcados |
+| `registrar_entrada` | `producto, cantidad, costo_unit, proveedor?` | Llegó mercancía; alerta si subió el precio |
+| `ordenes_compra` | — | Órdenes pendientes de aprobar |
+| `aprobar_orden` / `rechazar_orden` | `orden_id` | Aprueba y la manda al proveedor por WhatsApp / la descarta |
+| `margen_servicio` | `servicio?` | Costo de insumos vs precio, margen % y precio sugerido |
+| `prediccion_stock` | — | Días de stock y fechas de agotamiento |
+| `clientas_inactivas` | `dias? (42)` | Lista para seguimiento; el dueño puede pedir "mándales recordatorio" |
+| `ficha_cliente` | `nombre_o_telefono` | Historial de visitas, fórmula personal y saldo |
+| `crear_receta` | `servicio, insumos: [{producto, cantidad}]` | Receta de servicio |
+
+Staff (solo estas):
+| Tool | Parámetros | Efecto |
+|---|---|---|
+| `registrar_uso` | `producto, cantidad` | Salida de stock con nota del staff |
+| `servicio_atendido` | `folio_o_cliente, servicio` | Aplica la receta, descuenta insumos y registra la visita en el archivo de clientes |
+| `consultar_stock` | `producto?` | Solo cantidades, **sin costos** |
+
+Cliente (tienda):
+| Tool | Parámetros | Efecto |
+|---|---|---|
+| `ver_productos` | — | Productos a la venta con precio y disponibilidad (sin mostrar cantidades exactas) |
+| `comprar_producto` | `producto_id, cantidad` | Valida el stock, crea el pedido y el cobro CoDi. **El stock se descuenta solo al confirmarse el pago** |
 
 ## 10. Casos borde (respuestas listas para los jueces)
 
@@ -417,6 +466,9 @@ Dueño (todas las de cliente, más):
 | Devolución | **La API de pey no tiene endpoint de reembolso.** El dueño devuelve por transferencia y registra `registrar_devolucion` (movimiento negativo en el libro). Se dice tal cual en la demo |
 | El pago no prueba identidad ni entrega | Lo dice la hoja. La entrega se confirma aparte (la cita se marca como atendida por el dueño) |
 | Cliente sin CoDi activo en su banco | El push falla o no llega; el agente ofrece **link de pago** (acepta tarjeta) |
+| Tienda: se agota el stock entre el pedido y el pago | El pago se acepta (el dinero llegó), el pedido queda `pagado_sin_stock`, se avisa al dueño y al cliente: se surte en cuanto llegue o se devuelve |
+| Servicio atendido dos veces por error | `servicio_atendido` es idempotente por cita: si la cita ya está `atendida`, no se descuenta otra vez |
+| Insumo de la receta sin stock suficiente | Se descuenta lo que haya, se registra el faltante y se alerta al dueño. Nunca se deja stock negativo silencioso |
 
 ## 11. Recordatorios (cobranza)
 
@@ -444,6 +496,35 @@ Adapta `referencia_cerberus/cfdi_engine.py`, que genera un XML CFDI 4.0 válido 
   - hasta $3,500,000: 2.50 %
 - La respuesta siempre termina con: "Estimación informativa, no sustituye a tu contador ni al SAT."
 
+## 13B. Almacén, recetas, clientes y compras (Donna)
+
+Esto ya existe y funciona en `referencia_cerberus/salon_almacen/` (bot de Telegram) y `referencia_cerberus/negocio/`. **El trabajo es portarlo al agente de WhatsApp, no reescribirlo.**
+
+**Base de datos.** El almacén usa el esquema de `negocio/empire_ledger.py` y luego el de `negocio/almacen_db.py`:
+- `parts` (productos, con `processing_cost` y `sale_price`)
+- `stock_items` (lotes PEPS/FIFO)
+- `inventory_tx` (auditoría)
+- `suppliers`, `locations`
+- `service_recipes`, `clients`, `client_formulas`
+
+Para crearlo: `EmpireLedger(db_path)` crea las tablas base y luego `AlmacenDB(db_path).migrate()` las extiende. Usa **un archivo propio** `data/almacen.db`, separado de `data/app.db` (pagos). Así se porta casi sin cambios. El enlace entre los dos es el teléfono del cliente (`clients.telefono` ↔ `contactos.telefono10`).
+
+**Seed.** `salon_almacen/seed.py` trae unos 20 insumos de salón con mínimos y costos. Úsalo para que la demo tenga inventario real desde el arranque. Agrega una receta por servicio del catálogo:
+- tinte = 1 tubo de tinte + 1 par de guantes + papel aluminio
+- corte = toalla desechable
+
+**Portado.** Cambia `from host_engine...` por imports locales y `ask_llm` / `ask_llm_vision` por `app/agente/llm.py`. El envío por Telegram se reemplaza por `app/whatsapp.py`. Cada función `reporte_*` devuelve texto y sirve tal cual como respuesta de una tool.
+
+**Enganche con pagos** (lo que hace verificable la cadena):
+- Pago de anticipo o saldo → no toca el inventario (el servicio aún no se presta).
+- `servicio_atendido` (staff o dueño) → `recetas.aplicar_receta` → `enzo` descuenta → `valentina.registrar_visita` → `analisis` recalcula el margen → si algo queda bajo el mínimo, se llama `aldo.generar_orden` y se avisa al dueño.
+- Pago de pedido de tienda → `enzo` registra la salida del producto vendido → mensaje "listo para recoger".
+- `aprobar_orden` → `whatsapp.enviar_texto(proveedor, orden)` → al recibir la mercancía, `registrar_entrada` + `tomas.alerta_variacion_en_recepcion`.
+
+**Fotos (si da tiempo).** `salon_almacen/skill.py` (`procesar_foto`) y `angelica.leer_formula_foto` usan visión para leer un producto o una fórmula manuscrita. Solo porta esto si el LLM elegido acepta imágenes y queda tiempo. Es muy vistoso, pero no es crítico.
+
+**Seguridad.** Reutiliza las ideas de `salon_almacen/security.py`: whitelist de staff, sanitizado de entrada y respuesta "fuera de tema".
+
 ## 14. Panel en vivo (`GET /panel`) y API para el panel
 
 - `GET /api/estado` → JSON con:
@@ -468,6 +549,24 @@ Adapta `referencia_cerberus/cfdi_engine.py`, que genera un XML CFDI 4.0 válido 
 | `cfdi_engine.py` | `departamentos/facturas.py` | `generar_cfdi_xml`, `generar_pdf`, `NullAdapter` casi tal cual. Config desde `negocio.json`. Ajustar `forma_pago` según la sección 12 |
 | `ops_router.py` | (concepto) | Ruteo de intents por keywords. **No se usa:** el LLM con tools lo reemplaza. Sirve como fallback si no hay LLM |
 | `llm_router.py` | `agente/llm.py` | Solo como referencia de manejo de errores y timeouts. Se reescribe con el cliente OpenAI-compatible |
+| `negocio/empire_ledger.py` + `negocio/almacen_db.py` | `app/negocio/almacen_db.py` | **Casi tal cual.** Solo cambia la ruta por defecto a `data/almacen.db` |
+| `salon_almacen/agents/enzo.py` | `app/negocio/enzo.py` | Uso, entradas, mermas, estado y alertas de stock bajo |
+| `salon_almacen/agents/recetas.py` + `angelica.py` | `app/negocio/recetas.py` | `aplicar_receta`, `costear_receta`, `crear_receta_desde_texto`; la lectura de fórmula por foto es opcional |
+| `salon_almacen/agents/aldo.py` + `whatsapp_sender.py` | `app/negocio/aldo.py` | Órdenes de compra, aprobar/rechazar, envío al proveedor. `aldo_scout` (buscar proveedores en web) **no** va |
+| `salon_almacen/agents/valentina.py` | `app/negocio/valentina.py` | Archivo de clientas, fórmulas, visitas, inactivas |
+| `salon_almacen/agents/isabel.py`, `tomas.py`, `veronica.py` | `app/negocio/analisis.py` | Predicción de agotamiento, márgenes, variación de precios, auditoría de uso |
+| `salon_almacen/agents/expediente.py` | (opcional) | Perfil por estilista. Solo si sobra tiempo |
+| `salon_almacen/agents/donna.py` + `skill.py` | `app/agente/` | Donna es el orquestador. Su `despachar_texto` lo reemplaza el LLM con tools, pero sus **reportes** (`reporte_matutino`, `salud_financiera`) se reusan |
+| `salon_almacen/onboarding.py` + `ingest.py` + `negocio/onboarding_engine.py` | `app/negocio/onboarding.py` | Alta del negocio por chat e inventario inicial desde texto o Excel. Para la demo basta el seed; esto es el pitch de "se instala en tu WhatsApp y ya" |
+| `salon_almacen/cron.py` + `negocio/alerta_imperativa.py` | `app/tareas.py` | Reporte matutino al dueño y alertas de stock bajo, en el mismo loop de la sección 11 |
+| `salon_almacen/security.py` + `negocio/auth_gate.py` + `negocio/contact_gate.py` | `app/negocio/atencion.py` + validación de rol | Whitelist de staff, sanitizado, filtro de contactos |
+| `negocio/annie_empathy.py` + `negocio/lingua_detector.py` | `app/agente/prompts.py` + `app/negocio/atencion.py` | Tono y guiones de atención; respuesta en el idioma del cliente |
+| `negocio/ventas_skill.py`, `deal_tracker.py`, `business_followup.py` | `departamentos/cotizaciones.py` + `cobranza.py` | Pipeline de oportunidades y seguimiento comercial |
+| `negocio/almacen_skill.py`, `almacenista_skill.py`, `tania_bodeguera_skill.py` | `app/negocio/enzo.py` | Frases y detección de intención en lenguaje natural para inventario; útiles para el fallback sin LLM |
+| `negocio/manufactura_db.py` + `manufactura_skill.py` | (opcional) | Recetas con COGS para negocios que producen (comida, manufactura). Para el pitch de "sirve para cualquier negocio" |
+| `negocio/cajero_ledger.py`, `budget_sentinel.py`, `prophet_forecasting.py` | `departamentos/libro.py` (opcional) | Caja, alertas de presupuesto y pronóstico de ventas |
+| `negocio/annie_reporter.py` | (opcional) | Bitácora de interacciones y reporte de atención |
+| `salon_almacen/DONNA_PROPUESTA_COMERCIAL.md` | Pitch | Problema, ROI y precios. Material para el pitch de Grok |
 
 **Antes de publicar el repo:** verifica que nada en `referencia_cerberus/` tenga secretos o datos personales (ya se limpió, pero revísalo). Si estorba, bórralo: el código nuevo no debe depender de él.
 
@@ -481,7 +580,7 @@ Adapta `referencia_cerberus/cfdi_engine.py`, que genera un XML CFDI 4.0 válido 
 
 ## 17. Variables de entorno
 
-Ver `.env.example`. Mínimo para funcionar: `PEY_API_KEY`, `PEY_WEBHOOK_SECRET`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `OWNER_PHONES`, `PUBLIC_BASE_URL`, `PANEL_KEY`.
+Ver `.env.example`. Mínimo para funcionar: `PEY_API_KEY`, `PEY_WEBHOOK_SECRET`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `OWNER_PHONES`, `PUBLIC_BASE_URL`, `PANEL_KEY`. Opcionales: `STAFF_PHONES` y `SUPPLIER_PHONE` (proveedor de la demo, para la orden de compra).
 
 ## 18. Despliegue
 

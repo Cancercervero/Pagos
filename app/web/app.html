@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d4145a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/marca/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&family=Literata:opsz,wght@7..72,560;7..72,680&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/marca/tokens.css">
+<title>Anillo</title>
+<style>
+  :root {
+    --tinta: #24160f;
+    --suave: #6d5344;
+    --hoja: #fff6ec;
+    --rosa: #d4145a;
+    --papel: #fffdf8;
+    --borde: #efd3a4;
+    --hilo: #5c3318;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background: #f3d7a4;
+    color: var(--tinta);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; background: transparent; border: 0; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--rosa); outline-offset: 2px; }
+  svg { width: 32px; height: 32px; stroke: var(--rosa); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .marco {
+    width: min(430px, 100%);
+    height: 100dvh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--hoja);
+    background-image:
+      radial-gradient(circle, rgba(212, 20, 90, .16) 1.1px, transparent 1.3px),
+      radial-gradient(circle, rgba(20, 163, 154, .18) 1.1px, transparent 1.3px);
+    background-size: 16px 18px, 22px 20px;
+    background-position: 0 0, 8px 9px;
+    padding: calc(4px + env(safe-area-inset-top)) 12px calc(8px + env(safe-area-inset-bottom));
+  }
+  .marco::before {
+    content: "";
+    flex: 0 0 32px;
+    margin: 0 -12px 4px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='216' height='58' viewBox='0 0 216 58'><path d='M0 7H216' stroke='%235c3318' stroke-width='2'/><g fill='%23e2186a'><path d='M4 12h28v22l-14 9-14-9z'/></g><circle cx='18' cy='22' r='3.1' fill='%23fff6ec'/><circle cx='12' cy='31' r='1.7' fill='%23fff6ec'/><circle cx='24' cy='31' r='1.7' fill='%23fff6ec'/><g fill='%23f2c14e'><path d='M40 12h28v22l-14 9-14-9z'/></g><circle cx='54' cy='22' r='3.1' fill='%23fff6ec'/><circle cx='48' cy='31' r='1.7' fill='%23fff6ec'/><circle cx='60' cy='31' r='1.7' fill='%23fff6ec'/><g fill='%2314a39a'><path d='M76 12h28v22l-14 9-14-9z'/></g><circle cx='90' cy='22' r='3.1' fill='%23fff6ec'/><circle cx='84' cy='31' r='1.7' fill='%23fff6ec'/><circle cx='96' cy='31' r='1.7' fill='%23fff6ec'/><g fill='%23f26522'><path d='M112 12h28v22l-14 9-14-9z'/></g><circle cx='126' cy='22' r='3.1' fill='%23fff6ec'/><circle cx='120' cy='31' r='1.7' fill='%23fff6ec'/><circle cx='132' cy='31' r='1.7' fill='%23fff6ec'/><g fill='%237a2e86'><path d='M148 12h28v22l-14 9-14-9z'/></g><circle cx='162' cy='22' r='3.1' fill='%23fff6ec'/><circle cx='156' cy='31' r='1.7' fill='%23fff6ec'/><circle cx='168' cy='31' r='1.7' fill='%23fff6ec'/><g fill='%232f9b4a'><path d='M184 12h28v22l-14 9-14-9z'/></g><circle cx='198' cy='22' r='3.1' fill='%23fff6ec'/><circle cx='192' cy='31' r='1.7' fill='%23fff6ec'/><circle cx='204' cy='31' r='1.7' fill='%23fff6ec'/></svg>");
+    background-repeat: repeat-x;
+    background-position: center top;
+    background-size: 120px 32px;
+  }
+  .marco > section:not([hidden]) { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  #casa:not([hidden]) { overflow: auto; }
+  section[hidden], [hidden] { display: none !important; }
+  h1 { font-family: var(--serif); font-weight: 680; font-size: 26px; letter-spacing: -0.03em; margin: 2px 0 4px; }
+  p.ayuda { color: var(--suave); margin: 0 0 18px; max-width: 34ch; }
+  .centro { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; }
+  .dibujo { width: 56px; height: 56px; border-radius: 18px; background: #b7efea; display: grid; place-items: center; }
+  .pozo { width: 48px; height: 48px; border-radius: 16px; background: var(--rosa); display: grid; place-items: center; }
+  .pozo svg { stroke: #fff6ec; }
+  #conectar .dibujo { width: 72px; height: 72px; border-radius: 22px; background: var(--rosa); }
+  #conectar .dibujo svg { width: 36px; height: 36px; stroke: #fff6ec; }
+  .aro { width: 112px; height: 112px; border-radius: 50%; background: var(--rosa); display: grid; place-items: center; margin: 0 0 8px; }
+  .aro video { width: 112px; height: 112px; object-fit: cover; border-radius: 50%; }
+  .aro.espera { animation: pulso 1.6s ease-in-out infinite; }
+  @keyframes pulso { 50% { transform: scale(1.04); } }
+  .tipos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 16px; }
+  .tipos button { display: grid; justify-items: start; gap: 10px; padding: 14px; border-radius: 18px; background: var(--papel); color: var(--tinta); text-align: left; box-shadow: inset 0 0 0 1px var(--borde); }
+  .tipos button.sel { background: var(--rosa); color: #fff6ec; box-shadow: none; }
+  .tipos button.sel .dibujo { background: #fff6ec; }
+  .tipos button.sel svg { stroke: var(--rosa); }
+  .grande { width: 100%; background: var(--rosa); color: #fff6ec; border-radius: 16px; padding: 16px 18px; font-weight: 600; }
+  .grande:disabled { opacity: .45; }
+  .otros { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .otros button, #volver-cara { background: var(--papel); border-radius: 16px; padding: 14px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--borde); }
+  #volver-cara { margin-top: 10px; color: var(--rosa); }
+  header.barra { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  header.barra strong { font-family: var(--serif); font-size: 22px; }
+  #quien { background: #f2c14e; color: var(--tinta); border-radius: 999px; padding: 6px 12px; font-size: 14px; font-weight: 600; }
+  .grupo { margin: 12px 0 0; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--suave); }
+  .cuadros { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cuadros button { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 112px; text-align: left; padding: 12px; border-radius: 18px; background: var(--papel); box-shadow: inset 0 0 0 1px var(--borde); }
+  .cuadros .nombre { font-weight: 600; }
+  .cuadros .quiere { font-weight: 400; color: var(--suave); font-size: 14px; }
+  .cuadros .sello, .alerta { background: #f2c14e; color: #3a2410; border-radius: 999px; padding: 3px 8px; font-size: 13px; font-weight: 600; }
+  .alerta { display: block; border-radius: 14px; padding: 10px 12px; }
+  .perfil { background: var(--papel); border-radius: 22px; padding: 14px 14px 12px; box-shadow: inset 0 0 0 1px var(--borde); display: grid; gap: 10px; }
+  .perfil .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .perfil .tel { margin: 0; color: var(--suave); font-size: 15px; }
+  .perfil .aviso { background: #f2c14e; color: #3a2410; border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
+  .perfil .pidio { margin: 0; font-family: var(--serif); font-size: 20px; line-height: 1.3; font-weight: 560; }
+  .perfil .chips-dato { display: flex; flex-wrap: wrap; gap: 6px; }
+  .perfil .chips-dato span { background: var(--hoja); border-radius: 999px; padding: 5px 10px; font-size: 14px; box-shadow: inset 0 0 0 1px var(--borde); }
+  .perfil .suave { margin: 0; color: var(--suave); font-size: 14px; line-height: 1.35; }
+  .perfil h3 { margin: 2px 0 0; font-family: var(--serif); font-size: 17px; font-weight: 560; }
+  .perfil .corte { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: baseline; }
+  .perfil .corte b { font-weight: 600; }
+  .perfil .corte span { color: var(--suave); font-size: 14px; text-align: right; }
+  .anaquel { display: grid; gap: 8px; }
+  .anaquel > h3 { margin: 12px 0 0; font-family: var(--serif); font-size: 18px; font-weight: 560; }
+  .pieza { background: var(--papel); border-radius: 18px; padding: 12px; box-shadow: inset 0 0 0 1px var(--borde); display: grid; gap: 8px; }
+  .pieza .tope { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .pieza .tope strong { font-family: var(--serif); font-size: 18px; font-weight: 560; }
+  .pieza .cuenta { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+  .metro { height: 8px; border-radius: 999px; background: #f3e6d8; overflow: hidden; }
+  .metro i { display: block; height: 100%; background: #14a39a; border-radius: 999px; }
+  .metro.bajo i { background: #f26522; }
+  .metro.vacio i { width: 0; }
+  .paso { display: flex; align-items: center; justify-content: space-between; }
+  .paso button { width: 44px; height: 44px; border-radius: 14px; background: var(--hoja); font-size: 22px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--borde); }
+  .paso button:disabled { opacity: .35; }
+  .pieza .suave { margin: 0; color: var(--suave); font-size: 14px; line-height: 1.35; }
+  .pieza .corte { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
+  .pieza .corte b { font-weight: 600; }
+  .pieza .corte span { color: var(--suave); font-size: 14px; text-align: right; }
+  .pieza.corta { grid-template-columns: 56px 1fr auto; align-items: center; }
+  .pieza.corta .pozo { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; color: #fff6ec; }
+  .pieza.corta .pozo svg { width: 32px; height: 32px; fill: currentColor; stroke: none; }
+  .pieza.corta .suave { margin: 0; }
+  .pieza.corta strong { font-family: var(--serif); font-size: 17px; font-weight: 560; }
+  .lado { display: grid; justify-items: end; gap: 4px; }
+  .lado b { font-size: 22px; font-variant-numeric: tabular-nums; }
+  .mini { display: flex; gap: 6px; }
+  .mini button { width: 36px; height: 36px; border-radius: 12px; background: var(--hoja); font-size: 20px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--borde); }
+  .mini button:disabled { opacity: .35; }
+  .malla .piezas { color: var(--suave); font-size: 13px; font-weight: 400; }
+  .servicio { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+  button.estrella { font-size: 22px; line-height: 1; min-width: 36px; min-height: 36px; color: var(--suave); }
+  button.estrella.prendida { color: #f2c14e; }
+  a.grande { display: block; text-align: center; text-decoration: none; margin-top: 8px; }
+  .cal-mes { display: grid; grid-template-columns: 36px 1fr 36px; align-items: center; margin-bottom: 4px; }
+  .cal-mes strong { text-align: center; font-weight: 600; }
+  .cal-mes button { font-size: 22px; color: var(--rosa); min-height: 36px; }
+  .semana { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 8px; }
+  .semana button { display: grid; justify-items: center; gap: 2px; padding: 2px 0 4px; }
+  .semana .letra { font-size: 12px; color: var(--suave); }
+  .semana .num { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; }
+  .semana button.sel .num { background: var(--rosa); color: #fff6ec; }
+  .semana .punto { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+  .semana button.tiene .punto { background: #14a39a; }
+  .semana button.sel.tiene .punto { background: var(--rosa); }
+  .hora-fila { display: grid; grid-template-columns: 46px 1fr; min-height: 52px; }
+  .hora-fila .hora { color: var(--suave); font-size: 12px; line-height: 1; }
+  .carril { border-top: 1px solid var(--borde); min-height: 52px; padding: 2px 0 2px 6px; }
+  .evento { display: block; width: 100%; text-align: left; background: #e7f7f5; border-radius: 8px; border-left: 4px solid #14a39a; padding: 6px 8px; min-height: 44px; }
+  .evento strong { display: block; font-weight: 600; }
+  .evento span { display: block; color: var(--suave); font-size: 13px; font-weight: 400; }
+  .malla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+  .malla button { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; min-height: 132px; padding: 14px 8px 12px; border-radius: 24px; background: var(--papel); text-align: center; box-shadow: inset 0 0 0 1px var(--borde); }
+  .malla .pozo { width: 76px; height: 76px; border-radius: 22px; }
+  .malla .pozo svg { width: 46px; height: 46px; fill: currentColor; stroke: none; }
+  .malla .pozo { color: #fff6ec; }
+  .pozo.rosa { background: #d4145a; }
+  .pozo.turquesa { background: #14a39a; }
+  .pozo.naranja { background: #f26522; }
+  .pozo.morado { background: #7a2e86; }
+  .pozo.verde { background: #2f9b4a; }
+  .pozo.amarillo { background: #f2c14e; color: #24160f; }
+  .malla .pozo.amarillo { background: #f2c14e; color: #24160f; }
+  .malla .pozo.turquesa { background: #14a39a; }
+  .malla .pozo.naranja { background: #f26522; }
+  .malla .pozo.verde { background: #2f9b4a; }
+  .malla .pozo.morado { background: #7a2e86; }
+  .malla .nombre { font-weight: 600; font-size: 15px; }
+  #frase { display: none; }
+  .flecha { color: #14a39a; font-size: 22px; line-height: 1; }
+  .volver { display: inline-flex; align-items: center; gap: 6px; background: var(--papel); color: var(--rosa); font-weight: 600; border-radius: 999px; padding: 8px 14px; margin-bottom: 8px; box-shadow: inset 0 0 0 1px var(--borde); }
+  video.camara { width: 100%; max-height: 220px; object-fit: cover; border-radius: 16px; background: #24160f; margin: 8px 0; }
+  img.codigo { width: 180px; height: 180px; background: #fff; border-radius: 16px; margin: 8px 0; }
+  #detalle:not([hidden]) { display: flex; }
+  #pie { flex-shrink: 0; display: grid; gap: 6px; padding-top: 6px; }
+  #cuerpo { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-bottom: 28px; }
+  #cuerpo.es-chat { overflow: hidden; padding-bottom: 0; }
+  #cuerpo .monto { text-align: center; }
+  .centro-texto { text-align: center; max-width: none; }
+  #cuerpo .aro { margin: 12px auto 16px; }
+  #log { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 12px; flex: 1; min-height: 0; overflow: auto; }
+  .chips, form.linea { flex-shrink: 0; }
+  .b { max-width: 88%; white-space: pre-wrap; padding: 10px 12px; }
+  .user { align-self: flex-end; background: var(--rosa); color: #fff6ec; border-radius: 16px 16px 4px 16px; }
+  .bot { align-self: flex-start; background: var(--papel); border-radius: 16px 16px 16px 4px; box-shadow: inset 0 0 0 1px var(--borde); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .chips button { background: var(--papel); color: var(--tinta); border-radius: 999px; padding: 8px 12px; box-shadow: inset 0 0 0 1px var(--borde); }
+  form.linea { display: flex; gap: 8px; align-items: center; background: var(--papel); border-radius: 16px; padding: 4px 4px 4px 14px; }
+  form.linea input { flex: 1; border: 0; background: transparent; padding: 10px 0; }
+  form.linea button { background: var(--rosa); color: #fff6ec; border-radius: 12px; padding: 10px 12px; font-weight: 600; }
+  ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+  li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--papel); border-radius: 14px; }
+  .vacio { color: var(--suave); }
+  .caras { display: flex; gap: 10px; margin: 16px 0 12px; }
+  .caras button { width: 56px; height: 56px; border-radius: 18px; background: var(--papel); display: grid; place-items: center; }
+  .caras button.sel { background: var(--rosa); }
+  .caras button.sel svg { stroke: #fff6ec; }
+  .monto { font-family: var(--serif); font-size: 56px; margin: 0; letter-spacing: -0.04em; color: var(--rosa); }
+  @media (max-width: 520px) { body { background: var(--hoja); } }
+  @media (prefers-reduced-motion: reduce) { .aro.espera { animation: none; } }
+</style>
+</head>
+<body>
+<div class="marco">
+  <section id="entrada">
+    <div class="centro">
+      <div class="aro" id="aro-login"></div>
+      <h1>Entra</h1>
+      <p class="ayuda" id="entrada-ayuda">Elige quién eres. La cámara guarda tu cara en este perfil. Después solo entra si eres tú.</p>
+      <div class="tipos">
+        <button type="button" id="soy-yo" class="sel">
+          <span class="dibujo" data-dibujo="persona"></span>
+          Yo
+        </button>
+        <button type="button" id="soy-negocio">
+          <span class="dibujo" data-dibujo="tienda"></span>
+          Mi negocio
+        </button>
+      </div>
+      <button class="grande" id="entrar" type="button">Entrar con Face ID</button>
+      <div class="otros">
+        <button type="button" id="con-huella">Huella</button>
+        <button type="button" id="con-correo">Correo</button>
+      </div>
+      <div id="paso-correo" hidden>
+        <form class="linea" id="form-correo">
+          <input id="correo" type="email" autocomplete="username" placeholder="tu@correo.com" aria-label="Correo">
+          <button type="submit">Enviar</button>
+        </form>
+        <button class="grande" id="google" type="button" hidden style="margin-top:10px;background:#fffdf8;color:#24160f;box-shadow:inset 0 0 0 1px #efd3a4">Continuar con Google</button>
+      </div>
+      <div id="paso-codigo" hidden>
+        <form class="linea" id="form-codigo">
+          <input id="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="Código" aria-label="Código">
+          <button type="submit">Verificar</button>
+        </form>
+        <p class="ayuda" id="codigo-local" hidden></p>
+        <button type="button" id="volver-cara">‹ Face ID</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="conectar" hidden>
+    <div class="centro">
+      <span class="dibujo" data-dibujo="whats"></span>
+      <h1>Estética</h1>
+      <p class="ayuda">Esta es la central. Las clientas y lo que buscan están en Clientas. La venta la hacen los agentes en Meta.</p>
+      <button class="grande" id="conectar-wa" type="button">Entrar a la central</button>
+    </div>
+  </section>
+
+  <section id="casa" hidden>
+    <header class="barra">
+      <strong>Anillo</strong>
+      <span id="quien">Yo</span>
+    </header>
+    <p class="ayuda" id="frase">Entra a una cosa a la vez.</p>
+    <div class="malla" id="malla"></div>
+  </section>
+
+  <section id="detalle" hidden>
+    <button class="volver" id="volver" type="button">‹ Atrás</button>
+    <h1 id="titulo"></h1>
+    <div id="cuerpo"></div>
+  </section>
+</div>
+<script>
+const D = {
+  persona: '<svg viewBox="0 0 80 80"><circle cx="40" cy="28" r="12"/><path d="M18 66c4-14 12-20 22-20s18 6 22 20"/></svg>',
+  tienda: '<svg viewBox="0 0 80 80"><path d="M14 34h52l-6-14H20z"/><path d="M18 34v28h44V34"/><path d="M34 62V44h12v18"/></svg>',
+  whats: '<svg viewBox="0 0 80 80"><rect x="22" y="12" width="28" height="52" rx="6"/><path d="M52 28h12a8 8 0 0 1 0 16H52"/><circle cx="36" cy="56" r="2" fill="currentColor" stroke="none"/></svg>',
+  chat: '<svg viewBox="0 0 80 80"><path d="M16 20h40a8 8 0 0 1 8 8v18a8 8 0 0 1-8 8H32l-12 12v-12h-4a8 8 0 0 1-8-8V28a8 8 0 0 1 8-8z"/></svg>',
+  agenda: '<svg viewBox="0 0 80 80"><rect x="16" y="18" width="48" height="46" rx="6"/><path d="M16 32h48M30 14v10M50 14v10"/></svg>',
+  banco: '<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="22"/><circle cx="40" cy="40" r="8"/></svg>',
+  almacen: '<svg viewBox="0 0 80 80"><path d="M14 28l26-12 26 12-26 12z"/><path d="M14 28v24l26 12 26-12V28"/><path d="M40 40v24"/></svg>',
+  dinero: '<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="22"/><path d="M40 26v28M32 32h12a6 6 0 0 1 0 12H32"/></svg>',
+  gastos: '<svg viewBox="0 0 80 80"><path d="M24 30h32v28a6 6 0 0 1-6 6H30a6 6 0 0 1-6-6z"/><path d="M30 30v-4a10 10 0 0 1 20 0v4"/></svg>',
+  resena: '<svg viewBox="0 0 80 80"><path d="M40 16l7 16h16l-13 10 5 16-15-10-15 10 5-16-13-10h16z"/></svg>',
+  cara: '<svg viewBox="0 0 80 80"><circle cx="40" cy="40" r="22"/><path d="M30 36h.1M50 36h.1M30 48c4 6 16 6 20 0"/></svg>',
+  escanear: '<svg viewBox="0 0 80 80"><path d="M18 30V20h10M52 20h10v10M62 50v10H52M28 60H18V50"/><path d="M28 40h24"/></svg>',
+  seguridad: '<svg viewBox="0 0 80 80"><path d="M40 14l22 8v16c0 14-10 22-22 28-12-6-22-14-22-28V22z"/></svg>',
+  gente: '<svg viewBox="0 0 80 80"><circle cx="28" cy="26" r="10"/><path d="M8 66c2-16 10-24 20-24s18 8 20 24z"/><circle cx="54" cy="30" r="8"/><path d="M40 66c1-12 8-18 16-18 8 0 13 5 15 18z"/></svg>',
+  tijeras: '<svg viewBox="0 0 80 80"><circle cx="22" cy="20" r="9"/><circle cx="22" cy="60" r="9"/><path d="M30 24l36 26-6 7-32-24z"/><path d="M30 56l36-26-6-7-32 24z"/></svg>',
+  calendario: '<svg viewBox="0 0 80 80"><rect x="14" y="20" width="52" height="46" rx="8"/><rect x="24" y="10" width="8" height="16" rx="3"/><rect x="48" y="10" width="8" height="16" rx="3"/></svg>',
+  moneda: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M40 14a26 26 0 1 0 .1 0zM40 30a10 10 0 1 1-.1 0z"/></svg>',
+  cajas: '<svg viewBox="0 0 80 80"><rect x="12" y="12" width="26" height="26" rx="4"/><rect x="42" y="12" width="26" height="26" rx="4"/><rect x="27" y="42" width="26" height="26" rx="4"/></svg>',
+  billete: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M8 24h64v32H8zM40 32a8 8 0 1 0 .1 0z"/></svg>',
+  bolsa: '<svg viewBox="0 0 80 80"><path d="M22 34h36l-4 32H26z"/><path d="M30 34c0-14 20-14 20 0v8H30z"/></svg>',
+  escudo: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M40 10l24 8v18c0 16-10 24-24 32C26 60 16 52 16 36V18zM34 32a4 4 0 1 0 8 0 4 4 0 0 0-8 0zm12 0a4 4 0 1 0 8 0 4 4 0 0 0-8 0z"/></svg>',
+  estrella: '<svg viewBox="0 0 80 80"><path d="M40 10l8 18h20l-16 12 6 20-18-12-18 12 6-20-16-12h20z"/></svg>',
+  codigo: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M18 12h44v56H18zM28 24h8v8h-8zm16 0h8v8h-8zM28 36h8v8h-8zm16 16h8v8h-8z"/></svg>',
+  frasco: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M30 8h20v12h8l4 8v34a10 10 0 0 1-10 10H28a10 10 0 0 1-10-10V28l4-8h8zm6 34h16v8H36z"/></svg>',
+  spray: '<svg viewBox="0 0 80 80"><path d="M26 32h20v32a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8z"/><path d="M36 32V16h14v8h-6"/><circle cx="56" cy="14" r="4"/><circle cx="64" cy="10" r="2"/></svg>',
+  una: '<svg viewBox="0 0 80 80"><path d="M28 44c0-18 6-28 12-28s12 10 12 28v8H28z"/><path d="M20 52h40v8a8 8 0 0 1-8 8H28a8 8 0 0 1-8-8z"/></svg>',
+  rollo: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M40 12a28 28 0 1 0 .1 0zM40 32a8 8 0 1 1-.1 0z"/></svg>',
+  lamina: '<svg viewBox="0 0 80 80"><path fill-rule="evenodd" d="M12 18h56v44H12zM20 28h40v5H20zm0 12h28v5H20zm0 12h18v5H20z"/></svg>'
+};
+document.querySelectorAll(".dibujo").forEach((n) => { n.innerHTML = D[n.dataset.dibujo] || ""; });
+document.querySelector("#aro-login").innerHTML = D.cara;
+
+const params = new URLSearchParams(location.search);
+let clave = params.get("k") || localStorage.getItem("anillo") || "";
+if (clave) localStorage.setItem("anillo", clave);
+const cliente = "5522222222";
+const dueno = "5511111111";
+let telefono = localStorage.getItem("anillo-tel") || cliente;
+let rolUi = telefono === dueno ? "negocio" : "yo";
+let datos = null;
+let cobro = null;
+let ocupado = false;
+let estrellas = 3;
+let vista = "";
+let hiloSel = null;
+let citaAbierta = null;
+let diaAgenda = "";
+let pila = [];
+let leyendo = false;
+
+function marcarTipo(tipo) {
+  rolUi = tipo;
+  telefono = tipo === "negocio" ? dueno : cliente;
+  localStorage.setItem("anillo-tel", telefono);
+  document.querySelector("#soy-yo").classList.toggle("sel", tipo === "yo");
+  document.querySelector("#soy-negocio").classList.toggle("sel", tipo === "negocio");
+}
+document.querySelector("#soy-yo").onclick = () => marcarTipo("yo");
+document.querySelector("#soy-negocio").onclick = () => marcarTipo("negocio");
+marcarTipo(rolUi);
+
+let sesion = localStorage.getItem("anillo-sesion") || "";
+function cabeceras(json) {
+  const h = {};
+  if (json) h["Content-Type"] = "application/json";
+  if (sesion) h["X-Anillo-Sesion"] = sesion;
+  return h;
+}
+function guardarSesion(data) {
+  sesion = data.token;
+  localStorage.setItem("anillo-sesion", sesion);
+  if (data.telefono10) {
+    telefono = data.telefono10;
+    localStorage.setItem("anillo-tel", telefono);
+  }
+  rolUi = data.rol === "dueno" ? "negocio" : "yo";
+}
+function verCorreo(mostrarCorreo) {
+  document.querySelector("#entrar").hidden = mostrarCorreo;
+  document.querySelector(".otros").hidden = mostrarCorreo;
+  document.querySelector("#paso-correo").hidden = !mostrarCorreo;
+  document.querySelector("#paso-codigo").hidden = true;
+}
+document.querySelector("#con-correo").onclick = async () => {
+  verCorreo(true);
+  const r = await fetch("/api/seguridad/estado?k=" + encodeURIComponent(clave));
+  const estado = await r.json().catch(() => ({}));
+  const google = document.querySelector("#google");
+  google.hidden = !estado.google;
+  if (estado.google && window.google && google.accounts) {
+    google.accounts.id.initialize({client_id: estado.client_id, callback: (resp) => entrarGoogle(resp.credential)});
+  }
+};
+document.querySelector("#volver-cara").onclick = () => verCorreo(false);
+document.querySelector("#form-correo").onsubmit = async (ev) => {
+  ev.preventDefault();
+  const ayuda = document.querySelector("#entrada-ayuda");
+  const r = await fetch("/api/seguridad/correo?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true),
+    body: JSON.stringify({email: document.querySelector("#correo").value, rol: rolUi === "negocio" ? "dueno" : "cliente"})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { ayuda.textContent = data.detail || "No pude enviar el código."; return; }
+  const local = document.querySelector("#codigo-local");
+  if (data.codigo_local) {
+    local.hidden = false;
+    local.textContent = "Sin servidor de correo en esta máquina. Tu código es " + data.codigo_local + ".";
+  } else {
+    local.hidden = true;
+  }
+  document.querySelector("#paso-correo").hidden = true;
+  document.querySelector("#paso-codigo").hidden = false;
+};
+document.querySelector("#form-codigo").onsubmit = async (ev) => {
+  ev.preventDefault();
+  const r = await fetch("/api/seguridad/codigo?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true),
+    body: JSON.stringify({
+      email: document.querySelector("#correo").value,
+      codigo: document.querySelector("#codigo").value,
+      rol: rolUi === "negocio" ? "dueno" : "cliente"
+    })
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { document.querySelector("#entrada-ayuda").textContent = data.detail || "Ese código no corresponde."; return; }
+  guardarSesion(data);
+  if (localStorage.getItem("anillo-wa") === telefono) abrirCasa();
+  else abrirCasa();
+};
+async function entrarGoogle(credential) {
+  const r = await fetch("/api/seguridad/google?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true),
+    body: JSON.stringify({credential, rol: rolUi === "negocio" ? "dueno" : "cliente", email: ""})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) { document.querySelector("#entrada-ayuda").textContent = data.detail || "Google no reconoció la sesión."; return; }
+  guardarSesion(data);
+  if (localStorage.getItem("anillo-wa") === telefono) abrirCasa();
+  else abrirCasa();
+}
+document.querySelector("#google").onclick = () => {
+  document.querySelector("#entrada-ayuda").textContent = "Google se activa cuando esta máquina tiene el cliente configurado.";
+};
+
+async function entrarConCara(metodo) {
+  const aro = document.querySelector("#aro-login");
+  const ayuda = document.querySelector("#entrada-ayuda");
+  const boton = document.querySelector("#entrar");
+  boton.disabled = true;
+  aro.classList.add("espera");
+  const r = await fetch("/api/seguridad/entrar?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true),
+    body: JSON.stringify({rol: rolUi === "negocio" ? "dueno" : "cliente", metodo})
+  });
+  const desafio = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    aro.classList.remove("espera");
+    boton.disabled = false;
+    ayuda.textContent = desafio.detail || "No pude pedir la biometría.";
+    return;
+  }
+  guardarSesion(desafio);
+  const firma = await medirBio(desafio, metodo);
+  aro.classList.remove("espera");
+  boton.disabled = false;
+  if (!firma) {
+    ayuda.textContent = metodo === "huella"
+      ? "Este teléfono no midió la huella. Regístrala, o entra con la cara o con correo."
+      : "Este teléfono no midió la cara. Regístrala, o entra con huella o con correo.";
+    return;
+  }
+  const c = await fetch("/api/seguridad/bio/confirmar?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true), body: JSON.stringify(firma)
+  });
+  const data = await c.json().catch(() => ({}));
+  if (!c.ok) { ayuda.textContent = data.detail || "La biometría no cuadra."; return; }
+  guardarSesion(data);
+  if (localStorage.getItem("anillo-wa") === telefono) abrirCasa();
+  else abrirCasa();
+}
+document.querySelector("#entrar").onclick = () => registrarConCamara();
+document.querySelector("#con-huella").onclick = () => entrarConCara("huella");
+
+function tomarCara() {
+  return new Promise((resolve) => {
+    if (window.AnilloCara && window.AnilloCara.registrar) {
+      const timer = setTimeout(() => resolve(null), 12000);
+      window.anilloCaraLista = (ok, jpeg) => {
+        clearTimeout(timer);
+        resolve(ok && jpeg ? jpeg : null);
+      };
+      window.AnilloCara.registrar();
+      return;
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      resolve(null);
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({video: {facingMode: "user"}, audio: false}).then((stream) => {
+      const video = document.createElement("video");
+      video.playsInline = true;
+      video.muted = true;
+      video.srcObject = stream;
+      const aro = document.querySelector("#aro-login");
+      aro.replaceChildren(video);
+      video.onloadeddata = () => {
+        video.play();
+        setTimeout(() => {
+          const canvas = document.createElement("canvas");
+          canvas.width = 320;
+          canvas.height = Math.max(1, Math.round(video.videoHeight * 320 / (video.videoWidth || 320)));
+          canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+          stream.getTracks().forEach((t) => t.stop());
+          aro.innerHTML = D.cara;
+          resolve(canvas.toDataURL("image/jpeg", 0.75));
+        }, 900);
+      };
+    }).catch(() => resolve(null));
+  });
+}
+
+async function registrarConCamara() {
+  const ayuda = document.querySelector("#entrada-ayuda");
+  const boton = document.querySelector("#entrar");
+  boton.disabled = true;
+  ayuda.textContent = "Mírame. Te estoy registrando.";
+  const foto = await tomarCara();
+  if (!foto) {
+    boton.disabled = false;
+    ayuda.textContent = "No pude usar la cámara. Permite la cámara y vuelve a picar Face ID.";
+    return;
+  }
+  const r = await fetch("/api/seguridad/cara?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true),
+    body: JSON.stringify({rol: rolUi === "negocio" ? "dueno" : "cliente", imagen: foto})
+  });
+  const data = await r.json().catch(() => ({}));
+  boton.disabled = false;
+  if (!r.ok) { ayuda.textContent = data.detail || "No pude registrar la cara."; return; }
+  guardarSesion(data);
+  ayuda.textContent = data.reconocida ? "Te reconocí." : "Listo. Tu cara quedó en la base de este perfil.";
+  if (localStorage.getItem("anillo-wa") === telefono) abrirCasa();
+  else abrirCasa();
+}
+
+function medirBio(desafio, metodo) {
+  return new Promise((resolve) => {
+    if (!(window.AnilloBio && window.AnilloBio.disponible && window.AnilloBio.disponible())) {
+      resolve(null);
+      return;
+    }
+    window.anilloBioListo = (ok, publica, firma, credencial) => {
+      resolve(ok ? {desafio_id: desafio.id, credencial_id: credencial, publica, firma} : null);
+    };
+    window.AnilloBio.confirmar(desafio.desafio, desafio.alias, metodo || "cara");
+  });
+}
+
+document.querySelector("#conectar-wa").onclick = async () => {
+  const boton = document.querySelector("#conectar-wa");
+  boton.disabled = true;
+  boton.textContent = "Abriendo…";
+  localStorage.setItem("anillo-wa", telefono);
+  boton.disabled = false;
+  boton.textContent = "Entrar a la central";
+  abrirCasa();
+};
+
+function mostrar(id) {
+  for (const s of ["entrada", "conectar", "casa", "detalle"]) {
+    document.querySelector("#" + s).hidden = s !== id;
+  }
+}
+function abrirCasa() {
+  const nombre = datos && datos.quien && datos.quien.nombre;
+  document.querySelector("#quien").textContent = rolUi === "negocio"
+    ? (nombre ? nombre + " · dueña" : "Mi negocio")
+    : (nombre || "Yo");
+  const piezas = rolUi === "negocio"
+    ? [["chat","Clientas","gente","rosa"],["agenda","Agenda","calendario","amarillo"],["banco","Banco","moneda","turquesa"],["almacen","Almacén","cajas","naranja"],["dinero","Dinero","billete","verde"],["seguridad","Seguridad","escudo","morado"],["resena","Reseñas","estrella","amarillo"]]
+    : [["chat","Estética","tijeras","rosa"],["escanear","Escanear","codigo","turquesa"],["agenda","Agenda","calendario","amarillo"],["banco","Banco","moneda","turquesa"],["gastos","Mis gastos","bolsa","naranja"],["seguridad","Seguridad","escudo","morado"],["resena","Reseñas","estrella","amarillo"]];
+  const malla = document.querySelector("#malla");
+  malla.replaceChildren();
+  for (const [id, nombre, icono, tinta] of piezas) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = '<span class="pozo ' + tinta + '">' + (D[icono] || "") + '</span><span class="nombre">' + nombre + '</span>';
+    b.onclick = () => {
+      if (id === "chat" && rolUi !== "negocio") {
+        empujar({vista: "hilo", nombre: "Estética", hilo: {hilo: "estetica", telefono: telefono, nombre: "Estética", quiere: "", resumen: ""}});
+        return;
+      }
+      if (id === "agenda") { citaAbierta = null; diaAgenda = ""; }
+      empujar({vista: id, nombre: nombre});
+    };
+    malla.appendChild(b);
+  }
+  mostrar("casa");
+  pintar();
+}
+document.querySelector("#volver").onclick = () => {
+  if (pila.length) history.back();
+};
+window.addEventListener("popstate", () => {
+  soltarCamara();
+  pila.pop();
+  aplicar();
+});
+
+function empujar(paso) {
+  pila.push(paso);
+  history.pushState({i: pila.length}, "");
+  aplicar();
+}
+function aplicar() {
+  const paso = pila[pila.length - 1];
+  if (!paso) {
+    vista = "";
+    hiloSel = null;
+    mostrar("casa");
+    return;
+  }
+  vista = paso.vista;
+  hiloSel = paso.hilo || null;
+  document.querySelector("#titulo").textContent = paso.nombre;
+  mostrar("detalle");
+  if (datos) dibujar();
+  pintar();
+}
+
+const chipsEstetica = [["Corte","quiero un corte"],["Tinte","quiero un tinte"],["Horarios","va"],["Las 5","el de las 5"]];
+const chipsNegocio = [["Existencias","existencias"],["Cómo voy","cómo voy"]];
+
+async function decir(texto) {
+  if (!clave || ocupado) return;
+  ocupado = true;
+  const r = await fetch("/api/chat?k=" + encodeURIComponent(clave) + "&modo=simulacion", {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({telefono10: telefono, texto, hilo: "estetica"})
+  });
+  ocupado = false;
+  if (r.ok) await pintar();
+}
+
+async function pintar() {
+  if (!clave) return;
+  let url = "/api/tablero?k=" + encodeURIComponent(clave) + "&telefono=" + telefono;
+  if (hiloSel) url += "&hilo=" + encodeURIComponent(hiloSel.hilo) + "&con=" + encodeURIComponent(hiloSel.telefono || telefono);
+  const r = await fetch(url);
+  if (!r.ok) return;
+  datos = await r.json();
+  cobro = datos.pendiente ? datos.pendiente.id : null;
+  if (hiloSel && datos.chats) {
+    const fresco = datos.chats.find((c) => c.telefono === hiloSel.telefono);
+    if (fresco) hiloSel = fresco;
+  }
+  const quien = document.querySelector("#quien");
+  if (quien && datos.quien && document.querySelector("#casa").hidden === false) {
+    quien.textContent = rolUi === "negocio"
+      ? (datos.quien.nombre ? datos.quien.nombre + " · dueña" : "Mi negocio")
+      : (datos.quien.nombre || "Yo");
+  }
+  if (vista) dibujar();
+}
+setInterval(() => { if (document.querySelector("#casa").hidden === false || vista) pintar(); }, 2000);
+
+function dibujar() {
+  if (vista === "escanear" && (document.querySelector("#video-scan") || document.querySelector("#cuerpo button"))) return;
+  const caja = document.querySelector("#cuerpo");
+  const y = caja.scrollTop;
+  caja.className = (vista === "hilo" && rolUi !== "negocio") ? "es-chat" : "";
+  const activo = document.activeElement;
+  const pieActual = document.querySelector("#pie");
+  if (activo && (activo.tagName === "INPUT" || activo.tagName === "TEXTAREA") && (caja.contains(activo) || (pieActual && pieActual.contains(activo)))) return;
+  if (pieActual) pieActual.remove();
+  caja.replaceChildren();
+  if (vista === "chat") chats(caja);
+  else if (vista === "hilo") hilo(caja);
+  else if (vista === "escanear") escanear(caja);
+  else if (vista === "seguridad") seguridadVista(caja);
+  else if (vista === "banco") banco(caja);
+  else if (vista === "agenda") agenda(caja);
+  else if (vista === "almacen") almacenVista(caja);
+  else if (vista === "anaquel") anaquelDe(caja);
+  else if (vista === "dinero") lista(caja, [["Cobrado", datos.mes.cobrado],["Apartado SAT", datos.mes.apartado],["Puedes usar", datos.mes.disponible]], "");
+  else if (vista === "gastos") lista(caja, [...datos.metas.map((m) => [m.nombre, m.meta]), ...datos.gastos.map((g) => [g.concepto, g.monto])], "Aún no anotas gastos.");
+  else if (vista === "resena") resenas(caja);
+  if (y) caja.scrollTop = y;
+}
+
+function llenarLog(log) {
+  const abajo = log.scrollHeight - log.scrollTop - log.clientHeight < 48;
+  log.replaceChildren();
+  if (!datos.chat.length) {
+    const p = document.createElement("p");
+    p.className = "vacio";
+    p.textContent = "Todavía no hay mensajes.";
+    log.appendChild(p);
+    return;
+  }
+  for (const m of datos.chat) {
+    const b = document.createElement("div");
+    b.className = "b " + (m.rol === "user" ? "user" : "bot");
+    b.textContent = m.contenido;
+    log.appendChild(b);
+  }
+  if (abajo) log.scrollTop = log.scrollHeight;
+}
+
+function chats(caja) {
+  const lista = (datos && datos.chats) || [];
+  if (!datos) {
+    const p = document.createElement("p");
+    p.className = "vacio";
+    p.textContent = "Cargando clientas…";
+    caja.appendChild(p);
+    return;
+  }
+  if (!lista.length) {
+    const p = document.createElement("p");
+    p.className = "vacio";
+    p.textContent = "Cuando una clienta escriba, su cuadro aparece aquí.";
+    caja.appendChild(p);
+    return;
+  }
+  const clientas = lista.filter((c) => c.rol !== "proveedor");
+  const proveedores = lista.filter((c) => c.rol === "proveedor");
+  if (clientas.length) {
+    const h = document.createElement("h2");
+    h.className = "grupo";
+    h.textContent = "Clientas";
+    caja.appendChild(h);
+    caja.appendChild(cuadrosDe(clientas));
+  }
+  if (proveedores.length) {
+    const h = document.createElement("h2");
+    h.className = "grupo";
+    h.textContent = "Proveedor";
+    caja.appendChild(h);
+    caja.appendChild(cuadrosDe(proveedores));
+  }
+}
+
+function cuadrosDe(lista) {
+  const cuadros = document.createElement("div");
+  cuadros.className = "cuadros";
+  for (const c of lista) {
+    const b = document.createElement("button");
+    b.type = "button";
+    const nombre = document.createElement("span");
+    nombre.className = "nombre";
+    nombre.textContent = c.nombre;
+    const tel = document.createElement("span");
+    tel.className = "quiere";
+    tel.textContent = c.telefono || "";
+    const quiere = document.createElement("span");
+    quiere.className = "quiere";
+    quiere.textContent = c.pidio || c.quiere || "";
+    const sigue = document.createElement("span");
+    sigue.className = "quiere";
+    const favs = c.favoritos || [];
+    const uso = c.rol === "proveedor"
+      ? "Proveedor. "
+      : (favs.length ? "Favorito: " + favs.join(", ") + ". " : "Usó: " + (c.ultimo_uso || "nada todavía") + ". ");
+    sigue.textContent = uso + (c.rol === "proveedor" ? "" : (c.seguimiento || ""));
+    b.append(nombre, tel, quiere, sigue);
+    if (c.alerta) {
+      const aviso = document.createElement("span");
+      aviso.className = "sello";
+      aviso.textContent = "Contestar";
+      b.appendChild(aviso);
+    }
+    b.onclick = () => empujar({vista: "hilo", nombre: c.nombre, hilo: c});
+    cuadros.appendChild(b);
+  }
+  return cuadros;
+}
+
+function hilo(caja) {
+  if (rolUi === "negocio") return ficha(caja);
+  const nota = document.createElement("p");
+  nota.className = "ayuda";
+  nota.textContent = (hiloSel && (hiloSel.resumen || hiloSel.quiere)) || "Todavía no dice qué busca.";
+  const log = document.createElement("div");
+  log.id = "log";
+  llenarLog(log);
+  caja.append(nota, log);
+  const propio = !hiloSel || hiloSel.telefono === telefono;
+  if (!propio) return;
+  const cuales = rolUi === "negocio" ? chipsNegocio : chipsEstetica;
+  const chips = document.createElement("div");
+  chips.className = "chips";
+  for (const [nombre, texto] of cuales) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = nombre;
+    b.onclick = () => decir(texto);
+    chips.appendChild(b);
+  }
+  const form = document.createElement("form");
+  form.className = "linea";
+  const input = document.createElement("input");
+  input.placeholder = "Escribe";
+  input.setAttribute("aria-label", "Mensaje");
+  const enviar = document.createElement("button");
+  enviar.textContent = "Enviar";
+  form.append(input, enviar);
+  form.onsubmit = (ev) => { ev.preventDefault(); const t = input.value.trim(); input.value = ""; if (t) decir(t); };
+  caja.append(chips, form);
+}
+
+function campoTexto(placeholder, etiqueta) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.placeholder = placeholder;
+  input.setAttribute("aria-label", etiqueta);
+  input.setAttribute("inputmode", "text");
+  input.setAttribute("enterkeyhint", "send");
+  input.setAttribute("autocomplete", "off");
+  input.setAttribute("autocorrect", "off");
+  input.spellcheck = false;
+  return input;
+}
+
+function serviciosDe(para, lista) {
+  const wrap = document.createElement("div");
+  const h = document.createElement("h3");
+  h.textContent = "Lo que ya usó";
+  wrap.appendChild(h);
+  for (const s of lista || []) {
+    const fila = document.createElement("div");
+    fila.className = "servicio";
+    const nombre = document.createElement("span");
+    nombre.textContent = s.veces > 1 ? s.nombre + ", " + s.veces + " veces" : s.nombre;
+    const estrella = document.createElement("button");
+    estrella.type = "button";
+    estrella.className = "estrella" + (s.favorito ? " prendida" : "");
+    estrella.textContent = s.favorito ? "★" : "☆";
+    estrella.setAttribute("aria-label", (s.favorito ? "Quitar de favoritos " : "Guardar en favoritos ") + s.nombre);
+    estrella.onclick = () => marcarFavorito(para, s.nombre);
+    fila.append(nombre, estrella);
+    wrap.appendChild(fila);
+  }
+  return wrap;
+}
+
+function lineaSuave(texto) {
+  const p = document.createElement("p");
+  p.className = "suave";
+  p.textContent = texto;
+  return p;
+}
+
+function chipsDe(textos) {
+  const caja = document.createElement("div");
+  caja.className = "chips-dato";
+  for (const t of textos) {
+    const s = document.createElement("span");
+    s.textContent = t;
+    caja.appendChild(s);
+  }
+  return caja;
+}
+
+async function marcarFavorito(para, texto) {
+  if (!para || !texto) return;
+  const r = await fetch("/api/favorito?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({desde: telefono, para, texto})
+  });
+  if (r.ok) await pintar();
+}
+
+function formulaDe(para) {
+  const form = document.createElement("form");
+  form.className = "linea";
+  const input = campoTexto("Fórmula o gusto", "Fórmula");
+  const enviar = document.createElement("button");
+  enviar.textContent = "Guardar";
+  form.append(input, enviar);
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const t = input.value.trim();
+    if (!t || !para) return;
+    enviar.disabled = true;
+    const r = await fetch("/api/formula?k=" + encodeURIComponent(clave), {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({desde: telefono, para, texto: t})
+    });
+    enviar.disabled = false;
+    input.value = "";
+    if (r.ok) await pintar();
+  };
+  return form;
+}
+
+function ficha(caja) {
+  const c = hiloSel || {};
+  const f = document.createElement("article");
+  f.className = "perfil";
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.appendChild(lineaSuave(c.telefono || ""));
+  for (const parte of (c.alerta || "").split(".").map((t) => t.trim()).filter(Boolean)) {
+    const aviso = document.createElement("span");
+    aviso.className = "aviso";
+    aviso.textContent = parte;
+    meta.appendChild(aviso);
+  }
+  f.appendChild(meta);
+  const pidio = document.createElement("p");
+  pidio.className = "pidio";
+  pidio.textContent = c.pidio || "Todavía no pide nada.";
+  f.appendChild(pidio);
+  if (c.rol !== "proveedor") {
+    const perfil = [c.veces, c.gasto_txt, c.ritmo].filter(Boolean);
+    if (perfil.length) {
+      const h = document.createElement("h3");
+      h.textContent = "Perfil";
+      f.append(h, chipsDe(perfil));
+    }
+  }
+  if (c.rol === "proveedor") {
+    const materiales = c.surte || [];
+    if (materiales.length) {
+      const h = document.createElement("h3");
+      h.textContent = "Surte";
+      f.append(h, chipsDe(materiales.map((s) => s.nombre)));
+      const pide = materiales.filter((s) => s.pide).map((s) => s.nombre);
+      if (pide.length) f.appendChild(lineaSuave("El almacén pide: " + pide.join(", ") + "."));
+    }
+    if (c.pedido) f.appendChild(pedidoDe(c.pedido));
+  } else {
+    const gustos = (c.interes || "").split(",").map((t) => t.trim()).filter((t) => t && !t.startsWith("No dijo"));
+    for (const t of c.favoritos || []) if (t && !gustos.includes(t)) gustos.push(t);
+    if (gustos.length) {
+      const h = document.createElement("h3");
+      h.textContent = "Le gusta";
+      f.append(h, chipsDe(gustos));
+    }
+  }
+  if (c.seguimiento) f.appendChild(lineaSuave(c.seguimiento));
+  if (c.ultimo_uso && !String(c.ultimo_uso).startsWith("Todavía")) f.appendChild(lineaSuave("Lo último: " + c.ultimo_uso));
+  if (c.formula && c.formula !== "Sin fórmula anotada") f.appendChild(lineaSuave("Fórmula: " + c.formula));
+  if ((c.servicios || []).length) f.appendChild(serviciosDe(c.telefono, c.servicios));
+  else if (c.rol !== "proveedor") f.appendChild(lineaSuave("Sin servicio pagado."));
+  const pres = c.presupuestos || [];
+  if (pres.length) {
+    const h = document.createElement("h3");
+    h.textContent = "Presupuestos";
+    const tabla = document.createElement("div");
+    tabla.className = "corte";
+    const grupos = new Map();
+    for (const p of pres) {
+      const nombre = p.conceptos || "Servicio";
+      const pagado = p.saldo === "$0.00" || p.estado === "liquidada";
+      const previo = grupos.get(nombre) || {pagado: false, abierto: false};
+      if (pagado) previo.pagado = true;
+      else previo.abierto = true;
+      grupos.set(nombre, previo);
+    }
+    for (const [nombre, estado] of grupos) {
+      const concepto = document.createElement("b");
+      concepto.textContent = nombre;
+      const marca = document.createElement("span");
+      marca.textContent = estado.pagado && estado.abierto ? "Pagado y otro abierto" : (estado.pagado ? "Pagado" : "Por cobrar");
+      tabla.append(concepto, marca);
+    }
+    f.append(h, tabla);
+  }
+  const ideas = (c.sugerencias || []).map((s) => s.nombre).filter(Boolean);
+  if (ideas.length) {
+    const h = document.createElement("h3");
+    h.textContent = "Del menú";
+    f.append(h, chipsDe(ideas));
+  }
+  if (c.respuesta) f.appendChild(lineaSuave("Le contestaste: " + c.respuesta));
+  if (rolUi === "negocio" && c.rol !== "proveedor") f.appendChild(formulaDe(c.telefono));
+  caja.appendChild(f);
+  const pie = document.createElement("div");
+  pie.id = "pie";
+  const nota = document.createElement("p");
+  nota.className = "ayuda";
+  nota.id = "aviso-respuesta";
+  const form = document.createElement("form");
+  form.className = "linea";
+  const input = campoTexto("Contestarle", "Respuesta");
+  const enviar = document.createElement("button");
+  enviar.textContent = "Enviar";
+  form.append(input, enviar);
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const t = input.value.trim();
+    if (!t || !c.telefono) return;
+    input.value = "";
+    enviar.disabled = true;
+    const r = await fetch("/api/contestar?k=" + encodeURIComponent(clave), {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({desde: telefono, para: c.telefono, texto: t})
+    });
+    const data = await r.json().catch(() => ({}));
+    enviar.disabled = false;
+    nota.textContent = !r.ok
+      ? (data.detail || "No se pudo guardar.")
+      : (data.salio ? "Se envió por Meta." : "Quedó en la ficha. Meta no tiene las llaves, así que no salió al teléfono.");
+    if (r.ok) pintar();
+  };
+  pie.append(form, nota);
+  caja.parentElement.appendChild(pie);
+}
+
+function cargador() {
+  const form = document.createElement("form");
+  form.className = "linea";
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".xml,.pdf,.csv,.xlsx,.mp3,.m4a,.wav,.webm,.ogg,audio/*,application/pdf,text/xml";
+  input.setAttribute("aria-label", "Factura o lista");
+  const boton = document.createElement("button");
+  boton.textContent = "Cargar";
+  const nota = document.createElement("p");
+  nota.className = "ayuda";
+  nota.textContent = "XML de factura, Excel, PDF o audio. Del XML salen el sku, las piezas y el precio de cada lote. Si el archivo no los trae, no se inventan.";
+  form.append(input, boton);
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    if (!input.files || !input.files[0]) return;
+    const fd = new FormData();
+    fd.append("archivo", input.files[0]);
+    fd.append("telefono10", telefono);
+    boton.disabled = true;
+    const r = await fetch("/api/cargar?k=" + encodeURIComponent(clave), {method: "POST", body: fd, headers: cabeceras()});
+    const data = await r.json().catch(() => ({}));
+    nota.textContent = data.nota || data.detail || "No pude cargar el archivo.";
+    boton.disabled = false;
+    if (r.ok) pintar();
+  };
+  const caja = document.createElement("div");
+  caja.append(nota, form);
+  return caja;
+}
+
+async function seguridadVista(caja) {
+  const r = await fetch("/api/seguridad/eventos?k=" + encodeURIComponent(clave), {headers: cabeceras()});
+  const data = await r.json().catch(() => ({}));
+  const nota = document.createElement("p");
+  nota.className = "ayuda";
+  if (!r.ok) {
+    nota.textContent = data.detail || "Entra de nuevo para ver la seguridad.";
+    caja.append(nota);
+    return;
+  }
+  nota.textContent = "Esto no cobra ni pide reseñas. Es el registro de quién entró con su cara, para ver si alguien más intentó abrir " + (data.rol === "dueno" ? "el negocio" : "tu perfil") + ". "
+    + (data.cara ? "Tu cara ya está guardada y se compara la próxima vez." : "Todavía no hay una cara guardada.");
+  caja.append(nota);
+  const ul = document.createElement("ul");
+  const vistos = (data.eventos || []).slice(0, 5);
+  for (const ev of vistos) {
+    const li = document.createElement("li");
+    li.textContent = ev.detalle;
+    ul.appendChild(li);
+  }
+  if (!(data.eventos || []).length) {
+    const li = document.createElement("li");
+    li.className = "vacio";
+    li.textContent = "Sin eventos.";
+    ul.appendChild(li);
+  }
+  caja.append(ul);
+}
+
+function soltarCamara() {
+  leyendo = false;
+  const video = document.querySelector("#video-scan");
+  const stream = video && video.srcObject;
+  if (stream) stream.getTracks().forEach((t) => t.stop());
+}
+
+function escanear(caja) {
+  const ayuda = document.createElement("p");
+  ayuda.className = "ayuda";
+  ayuda.textContent = "El código de prueba es de $0.01. Lo escaneas con la cámara y luego tu banco pide la cara. Aquí no se cobra más, ni se marca pagado hasta que el banco avise.";
+  const mostrar = document.createElement("button");
+  mostrar.className = "grande";
+  mostrar.type = "button";
+  mostrar.textContent = "Ver código de $0.01";
+  const img = document.createElement("img");
+  img.className = "codigo";
+  img.alt = "Código de $0.01";
+  img.hidden = true;
+  const camara = document.createElement("button");
+  camara.className = "grande";
+  camara.type = "button";
+  camara.textContent = "Abrir cámara";
+  camara.style.marginTop = "8px";
+  mostrar.onclick = async () => {
+    mostrar.disabled = true;
+    const r = await fetch("/api/cobro-centavo?k=" + encodeURIComponent(clave), {
+      method: "POST", headers: cabeceras(true),
+      body: JSON.stringify({telefono10: telefono})
+    });
+    const data = await r.json().catch(() => ({}));
+    mostrar.disabled = false;
+    if (!r.ok) { ayuda.textContent = data.detail || "No pude crear el código de $0.01."; return; }
+    img.src = data.qr + "?k=" + encodeURIComponent(clave);
+    img.hidden = false;
+    img.dataset.cobro = data.cobro_id;
+  };
+  camara.onclick = () => abrirCamara(caja, ayuda);
+  caja.append(ayuda, mostrar, img, camara);
+}
+
+async function abrirCamara(caja, aviso) {
+  soltarCamara();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    aviso.textContent = "Este teléfono no soltó la cámara.";
+    return;
+  }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+  } catch (e) {
+    aviso.textContent = "No pude usar la cámara. Acepta el permiso y vuelve a picar.";
+    return;
+  }
+  let video = document.querySelector("#video-scan");
+  if (!video) {
+    video = document.createElement("video");
+    video.id = "video-scan";
+    video.className = "camara";
+    video.setAttribute("playsinline", "");
+    video.muted = true;
+    caja.appendChild(video);
+  }
+  video.srcObject = stream;
+  await video.play();
+  if (!("BarcodeDetector" in window)) {
+    aviso.textContent = "La cámara está abierta, pero este visor no lee códigos. El de $0.01 sí se puede escanear desde otro teléfono.";
+    return;
+  }
+  const det = new BarcodeDetector({formats: ["qr_code"]});
+  leyendo = true;
+  const paso = async () => {
+    if (!leyendo || !video.isConnected) return;
+    try {
+      const codes = await det.detect(video);
+      if (codes.length && codes[0].rawValue) {
+        soltarCamara();
+        await cobrarCodigo(codes[0].rawValue, caja, aviso);
+        return;
+      }
+    } catch (e) {}
+    setTimeout(paso, 350);
+  };
+  paso();
+}
+
+async function cobrarCodigo(texto, caja, aviso) {
+  const r = await fetch("/api/escanear?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: cabeceras(true),
+    body: JSON.stringify({texto})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    aviso.textContent = data.detail || "Ese código no es de $0.01.";
+    return;
+  }
+  caraDePago(caja, data);
+}
+
+function caraDePago(caja, data) {
+  caja.replaceChildren();
+  const monto = document.createElement("p");
+  monto.className = "monto";
+  monto.textContent = "$0.01";
+  const aro = document.createElement("div");
+  aro.className = "aro";
+  aro.innerHTML = D.cara;
+  const ayuda = document.createElement("p");
+  ayuda.className = "ayuda centro-texto";
+  ayuda.textContent = "Código leído. Son $0.01. Tu banco pide la cara para soltarlos. Esta pantalla no los marca pagados.";
+  const boton = document.createElement("button");
+  boton.className = "grande";
+  boton.type = "button";
+  boton.textContent = "Ya confirmé con mi cara en el banco";
+  boton.onclick = async () => {
+    boton.disabled = true;
+    const r = await fetch("/api/cobro-centavo/" + data.cobro_id + "/mirar?k=" + encodeURIComponent(clave), {method: "POST", headers: cabeceras()});
+    const fresco = await r.json().catch(() => ({}));
+    boton.disabled = false;
+    if (fresco.estado === "pagado") {
+      graciasCompra(caja, fresco.resenas || (datos && datos.resenas_publicas) || []);
+      return;
+    }
+    ayuda.textContent = "Todavía no llega el aviso del banco. Sigue en tu app bancaria. Son $0.01.";
+  };
+  caja.append(monto, aro, ayuda, boton);
+}
+
+function banco(caja) {
+  const monto = document.createElement("p");
+  monto.className = "monto";
+  monto.textContent = datos.pendiente ? datos.pendiente.monto : (datos.pagos[0] ? datos.pagos[0].monto : "$0");
+  const aro = document.createElement("div");
+  aro.className = "aro" + (datos.pendiente ? " espera" : "");
+  aro.innerHTML = D.cara;
+  const boton = document.createElement("button");
+  boton.className = "grande";
+  boton.type = "button";
+  boton.textContent = datos.pendiente ? "Confirmar con Face ID" : (datos.pagos[0] ? "El banco ya avisó" : "Sin cobro");
+  boton.disabled = !datos.pendiente;
+  boton.onclick = confirmarBanco;
+  const ayuda = document.createElement("p");
+  ayuda.className = "ayuda centro-texto";
+  ayuda.textContent = "Esto lo pide tu banco para cobrar. No es la cara con la que entraste a la app.";
+  caja.append(monto, ayuda, aro, boton);
+}
+
+async function confirmarBanco() {
+  if (!cobro || ocupado) return;
+  ocupado = true;
+  await new Promise((ok) => setTimeout(ok, 800));
+  await fetch("/api/simular-banco?k=" + encodeURIComponent(clave), {
+    method: "POST", headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({cobro_id: cobro})
+  });
+  ocupado = false;
+  await pintar();
+}
+
+function graciasCompra(caja, lugares) {
+  caja.replaceChildren();
+  const titulo = document.createElement("p");
+  titulo.className = "ayuda";
+  titulo.textContent = "Gracias por tu compra. Por favor califícanos. Se abre Google para que dejes la reseña allá.";
+  caja.appendChild(titulo);
+  const lista = lugares.length ? lugares : [{lugar: "Google", url: "https://www.google.com/maps"}];
+  for (const l of lista) {
+    const a = document.createElement("a");
+    a.className = "grande";
+    a.href = l.url;
+    a.textContent = "Califícanos en " + l.lugar;
+    caja.appendChild(a);
+  }
+}
+
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const LETRAS = ["L", "M", "M", "J", "V", "S", "D"];
+const CLAVES = ["lun", "mar", "mie", "jue", "vie", "sab", "dom"];
+
+function isoDia(fecha) {
+  const m = String(fecha.getMonth() + 1).padStart(2, "0");
+  const d = String(fecha.getDate()).padStart(2, "0");
+  return fecha.getFullYear() + "-" + m + "-" + d;
+}
+
+function fechaDia(iso) {
+  return new Date(iso + "T12:00:00");
+}
+
+function lunesDe(iso) {
+  const fecha = fechaDia(iso);
+  const delta = (fecha.getDay() + 6) % 7;
+  fecha.setDate(fecha.getDate() - delta);
+  return isoDia(fecha);
+}
+
+function sumarDias(iso, n) {
+  const fecha = fechaDia(iso);
+  fecha.setDate(fecha.getDate() + n);
+  return isoDia(fecha);
+}
+
+function franjasDe(inicio, fin, paso) {
+  const horas = [];
+  let [h, m] = inicio.split(":").map(Number);
+  const [hf, mf] = fin.split(":").map(Number);
+  const limite = hf * 60 + mf;
+  while (h * 60 + m < limite) {
+    horas.push(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"));
+    m += paso;
+    h += Math.floor(m / 60);
+    m %= 60;
+  }
+  return horas;
+}
+
+function agenda(caja) {
+  const ag = (datos && datos.agenda) || {inicio: "10:00", fin: "19:00", intervalo: 60, citas: []};
+  const citas = ag.citas || [];
+  if (citaAbierta) {
+    const fresco = citas.find((c) => c.inicio === citaAbierta.inicio && c.telefono === citaAbierta.telefono);
+    if (fresco) citaAbierta = fresco;
+    const c = citaAbierta;
+    const f = document.createElement("article");
+    f.className = "perfil";
+    const cuando = (c.inicio || "").slice(0, 16).replace("T", " ");
+    f.appendChild(lineaSuave(cuando));
+    const hecho = document.createElement("p");
+    hecho.className = "pidio";
+    hecho.textContent = c.servicio || "Sin servicio";
+    f.appendChild(hecho);
+    const gusto = (c.preferencia || "").split(",").map((t) => t.trim()).filter((t) => t && !t.startsWith("Todavía"));
+    if (gusto.length) f.appendChild(chipsDe(gusto));
+    if (c.nota) f.appendChild(lineaSuave(c.nota));
+    if (c.gasto && c.gasto !== "Sin pago registrado") f.appendChild(lineaSuave("La vez pasada: " + c.gasto));
+    if (c.ultimo && !String(c.ultimo).startsWith("Todavía")) f.appendChild(lineaSuave("Lo último: " + c.ultimo));
+    if (c.formula && c.formula !== "Sin fórmula anotada") f.appendChild(lineaSuave("Fórmula: " + c.formula));
+    if (rolUi === "negocio" && (c.servicios || []).length) f.appendChild(serviciosDe(c.telefono, c.servicios));
+    const volver = document.createElement("button");
+    volver.type = "button";
+    volver.className = "grande";
+    volver.style.marginTop = "8px";
+    volver.textContent = "Ver el horario";
+    volver.onclick = () => { citaAbierta = null; dibujar(); };
+    caja.appendChild(f);
+    if (rolUi === "negocio") caja.appendChild(formulaDe(c.telefono));
+    caja.appendChild(volver);
+    return;
+  }
+  const hoy = isoDia(new Date());
+  const diasConCita = new Set(citas.map((c) => c.inicio.slice(0, 10)));
+  if (!diaAgenda) diaAgenda = diasConCita.has(hoy) ? hoy : ([...diasConCita][0] || hoy);
+  const lunes = lunesDe(diaAgenda);
+  const encabezado = document.createElement("div");
+  encabezado.className = "cal-mes";
+  const anterior = document.createElement("button");
+  anterior.type = "button";
+  anterior.textContent = "‹";
+  anterior.setAttribute("aria-label", "Semana anterior");
+  anterior.onclick = () => { diaAgenda = sumarDias(diaAgenda, -7); dibujar(); };
+  const titulo = document.createElement("strong");
+  titulo.textContent = MESES[fechaDia(diaAgenda).getMonth()];
+  const siguiente = document.createElement("button");
+  siguiente.type = "button";
+  siguiente.textContent = "›";
+  siguiente.setAttribute("aria-label", "Semana siguiente");
+  siguiente.onclick = () => { diaAgenda = sumarDias(diaAgenda, 7); dibujar(); };
+  encabezado.append(anterior, titulo, siguiente);
+  caja.appendChild(encabezado);
+  const semana = document.createElement("div");
+  semana.className = "semana";
+  for (let i = 0; i < 7; i++) {
+    const iso = sumarDias(lunes, i);
+    const b = document.createElement("button");
+    b.type = "button";
+    if (iso === diaAgenda) b.classList.add("sel");
+    if (diasConCita.has(iso)) b.classList.add("tiene");
+    const letra = document.createElement("span");
+    letra.className = "letra";
+    letra.textContent = LETRAS[i];
+    const num = document.createElement("span");
+    num.className = "num";
+    num.textContent = String(Number(iso.slice(8)));
+    const punto = document.createElement("span");
+    punto.className = "punto";
+    b.append(letra, num, punto);
+    b.onclick = () => { diaAgenda = iso; citaAbierta = null; dibujar(); };
+    semana.appendChild(b);
+  }
+  caja.appendChild(semana);
+  const claveDia = CLAVES[(fechaDia(diaAgenda).getDay() + 6) % 7];
+  const abiertos = ag.dias || ["lun", "mar", "mie", "jue", "vie", "sab"];
+  if (!abiertos.includes(claveDia)) {
+    caja.appendChild(lineaSuave("Domingo. Cerrado."));
+    return;
+  }
+  const rejilla = document.createElement("div");
+  const delDia = citas.filter((c) => c.inicio.slice(0, 10) === diaAgenda);
+  for (const hora of franjasDe(ag.inicio, ag.fin, ag.intervalo || 60)) {
+    const fila = document.createElement("div");
+    fila.className = "hora-fila";
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "hora";
+    etiqueta.textContent = hora;
+    const carril = document.createElement("div");
+    carril.className = "carril";
+    const ocupada = delDia.find((c) => c.inicio.slice(11, 16) === hora);
+    if (ocupada) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "evento";
+      const nombre = document.createElement("strong");
+      nombre.textContent = ocupada.nombre;
+      const detalle = document.createElement("span");
+      detalle.textContent = ocupada.estado === "confirmada" ? (ocupada.servicio || "Cita") : "Por confirmar";
+      b.append(nombre, detalle);
+      b.onclick = () => { citaAbierta = ocupada; dibujar(); };
+      carril.appendChild(b);
+    }
+    fila.append(etiqueta, carril);
+    rejilla.appendChild(fila);
+  }
+  caja.appendChild(rejilla);
+}
+
+function pedidoDe(pedido) {
+  const caja = document.createElement("div");
+  caja.className = "anaquel";
+  const h = document.createElement("h3");
+  h.textContent = "Pedido";
+  caja.appendChild(h);
+  caja.appendChild(lineaSuave("Llega: " + pedido.cuando));
+  caja.appendChild(lineaSuave("Dice que trae: " + pedido.trae));
+  caja.appendChild(lineaSuave("Factura: " + pedido.factura));
+  const cotejo = document.createElement("p");
+  cotejo.className = "alerta";
+  cotejo.textContent = pedido.cotejo;
+  caja.appendChild(cotejo);
+  return caja;
+}
+
+function textoMovimiento(m) {
+  if (m.tipo === "salida") return "Salió " + m.cantidad;
+  if (m.tipo === "entrada") return "Entró " + m.cantidad;
+  return "Conteo " + (m.nota && m.nota.indexOf("Sube") >= 0 ? "+" : "−") + m.cantidad;
+}
+
+const ANAQUELES = [
+  ["Tintes", "frasco", "rosa"],
+  ["Limpieza", "spray", "turquesa"],
+  ["Manicura", "una", "morado"],
+  ["Varios", "cajas", "naranja"]
+];
+
+function dibujoDe(sku) {
+  if (sku === "tinte") return "frasco";
+  if (sku === "papel-bano") return "rollo";
+  if (sku === "papel-aluminio") return "lamina";
+  const seccion = (ANAQUELES.find((s) => s[0] === sku) || [])[1];
+  return seccion || "cajas";
+}
+
+function tintaDe(seccion) {
+  const fila = ANAQUELES.find((s) => s[0] === seccion);
+  return fila ? fila[2] : "amarillo";
+}
+
+function precioDe(p) {
+  const costos = [];
+  for (const lote of p.lotes || []) if (lote.costo && !costos.includes(lote.costo)) costos.push(lote.costo);
+  return costos.length ? costos.join(" · ") : "Sin precio";
+}
+
+function almacenVista(caja) {
+  const productos = (datos && datos.almacen) || [];
+  const pedidos = ((datos && datos.chats) || []).filter((c) => c.rol === "proveedor" && c.pedido);
+  if (pedidos.length) {
+    const linea = document.createElement("p");
+    linea.className = "alerta";
+    const p = pedidos[0].pedido;
+    linea.textContent = pedidos[0].nombre + " · " + p.cuando + ". " + p.cotejo;
+    caja.appendChild(linea);
+  }
+  const malla = document.createElement("div");
+  malla.className = "malla";
+  for (const [nombre, icono, tinta] of ANAQUELES) {
+    const deAhi = productos.filter((item) => (item.seccion || "Varios") === nombre);
+    const piezas = deAhi.reduce((suma, item) => suma + item.existencia, 0);
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = '<span class="pozo ' + tinta + '">' + (D[icono] || "") + '</span><span class="nombre">' + nombre + '</span><span class="piezas">' + (deAhi.length ? piezas + (piezas === 1 ? " pieza" : " piezas") : "Vacío") + '</span>';
+    b.onclick = () => empujar({vista: "anaquel", nombre: nombre, seccion: nombre});
+    malla.appendChild(b);
+  }
+  caja.appendChild(malla);
+  caja.appendChild(cargador());
+}
+
+function anaquelDe(caja) {
+  const nombre = (pila[pila.length - 1] || {}).seccion || "";
+  const productos = ((datos && datos.almacen) || []).filter((item) => (item.seccion || "Varios") === nombre);
+  if (!productos.length) {
+    caja.appendChild(lineaSuave("Todavía no hay productos en " + nombre + "."));
+    return;
+  }
+  for (const p of productos) caja.appendChild(piezaDe(p));
+}
+
+function piezaDe(p) {
+  const art = document.createElement("article");
+  art.className = "pieza corta";
+  const icono = document.createElement("span");
+  icono.className = "pozo " + tintaDe(p.seccion);
+  icono.innerHTML = D[dibujoDe(p.sku)] || D.cajas;
+  const info = document.createElement("div");
+  const nombre = document.createElement("strong");
+  nombre.textContent = p.nombre;
+  const sku = document.createElement("p");
+  sku.className = "suave";
+  sku.textContent = "SKU " + p.sku;
+  const costo = document.createElement("p");
+  costo.className = "suave";
+  const lotes = (p.lotes || []).map((lote) => lote.cantidad + " a " + lote.costo).join(" · ");
+  costo.textContent = lotes || precioDe(p);
+  info.append(nombre, sku, costo);
+  const lado = document.createElement("div");
+  lado.className = "lado";
+  const cuenta = document.createElement("b");
+  cuenta.textContent = String(p.existencia);
+  const paso = document.createElement("div");
+  paso.className = "mini";
+  const menos = document.createElement("button");
+  menos.type = "button";
+  menos.textContent = "−";
+  menos.disabled = p.existencia <= 0;
+  menos.setAttribute("aria-label", "Bajar " + p.nombre);
+  const mas = document.createElement("button");
+  mas.type = "button";
+  mas.textContent = "+";
+  mas.setAttribute("aria-label", "Subir " + p.nombre);
+  menos.onclick = () => contar(p.sku, -1, menos);
+  mas.onclick = () => contar(p.sku, 1, mas);
+  paso.append(menos, mas);
+  lado.append(cuenta, paso);
+  art.append(icono, info, lado);
+  const usos = (p.movimientos || []).slice(0, 2).map(textoMovimiento);
+  if (usos.length) {
+    const mov = lineaSuave(usos.join(" · "));
+    mov.style.gridColumn = "1 / -1";
+    art.appendChild(mov);
+  }
+  return art;
+}
+
+async function contar(sku, delta, boton) {
+  const signo = delta < 0 ? "−" : "+";
+  boton.disabled = true;
+  const r = await fetch("/api/almacen/ajustar?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: cabeceras(true),
+    body: JSON.stringify({telefono10: telefono, sku: sku, delta: delta})
+  });
+  await r.json().catch(() => ({}));
+  boton.disabled = false;
+  boton.textContent = signo;
+  if (r.ok) pintar();
+}
+
+function lista(caja, filas, vacio) {
+  const ul = document.createElement("ul");
+  if (!filas.length && vacio) {
+    const li = document.createElement("li");
+    li.className = "vacio";
+    li.textContent = vacio;
+    ul.appendChild(li);
+  }
+  for (const [a, b] of filas) {
+    const li = document.createElement("li");
+    const i = document.createElement("span");
+    const d = document.createElement("span");
+    i.textContent = a;
+    d.textContent = b;
+    li.append(i, d);
+    ul.appendChild(li);
+  }
+  caja.appendChild(ul);
+}
+
+function resenas(caja) {
+  const nota = document.createElement("p");
+  nota.className = "ayuda";
+  nota.textContent = "La reseña no se escribe aquí. Cuando la clienta escanea el código y el banco confirma el pago, le sale gracias por su compra y el botón la lleva a Google para calificar.";
+  caja.appendChild(nota);
+}
+
+if (!clave) {
+  document.querySelector("#entrar").disabled = true;
+  document.querySelector(".ayuda").textContent = "Falta la clave de esta máquina en el enlace.";
+}
+</script>
+</body>
+</html>

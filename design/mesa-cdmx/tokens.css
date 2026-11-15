@@ -1,0 +1,24 @@
+/* Anillo. La mesa de pagos. */
+:root {
+  --cantera: #f3eee6;
+  --hoja: #faf7f2;
+  --tinta: #241c22;
+  --suave: #5c534c;
+  --jamaica: #7a3048;
+  --laton: #8c7349;
+  --parque: #1f5c45;
+  --linea: #e2d9cc;
+  --banco: #241c22;
+  --anillo: #d7c4b0;
+  --cloth: var(--cantera);
+  --sheet: var(--hoja);
+  --ink: var(--tinta);
+  --muted: var(--suave);
+  --bank: var(--banco);
+  --ring: var(--anillo);
+  --stamp: var(--jamaica);
+  --paid: var(--parque);
+  --line: var(--linea);
+  --serif: "Literata", Georgia, serif;
+  --sans: "Libre Franklin", "Segoe UI", sans-serif;
+}

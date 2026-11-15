@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mesa en vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&family=Literata:opsz,wght@7..72,560;7..72,680&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/marca/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cantera);
+    color: var(--tinta);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  header, main { width: min(1180px, calc(100% - 28px)); margin: 0 auto; }
+  header { padding: 22px 0 8px; display: flex; justify-content: space-between; gap: 16px; align-items: end; }
+  h1 { font-family: var(--serif); font-weight: 680; font-size: 34px; margin: 0; letter-spacing: -0.03em; }
+  header p { margin: 4px 0 0; color: var(--muted); max-width: 62ch; }
+  a { color: var(--bank); }
+  .llave { display: flex; gap: 8px; padding: 28px 0; }
+  .llave[hidden], #mesa[hidden] { display: none !important; }
+  input, button { font: inherit; }
+  input { border: 1px solid var(--line); background: var(--sheet); color: var(--ink); padding: 10px 12px; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+  .riel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+  .paso { background: transparent; border-bottom: 3px solid transparent; padding: 6px 2px 8px; }
+  .paso strong { display: block; font-size: 15px; }
+  .paso span { color: var(--muted); font-size: 14px; }
+  .paso.activo { border-color: var(--bank); }
+  .escena { display: grid; grid-template-columns: minmax(280px, 360px) minmax(280px, 1fr); gap: 14px; }
+  .fono, .banco, .hoja {
+    background: var(--sheet);
+    border: 1px solid var(--line);
+    min-height: 180px;
+  }
+  .fono { display: flex; flex-direction: column; max-height: 640px; }
+  .fono header, .banco header, .hoja h2 { padding: 12px 14px 0; }
+  .fono header { display: flex; justify-content: space-between; align-items: center; }
+  .quien { display: flex; gap: 6px; }
+  .quien button, .chips button, .enviar {
+    background: transparent;
+    border: 1px solid var(--ink);
+    padding: 6px 10px;
+  }
+  .quien button.sel { background: var(--ink); color: var(--sheet); }
+  #log { flex: 1; overflow: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-height: 220px; }
+  .b { max-width: 88%; padding: 8px 10px; white-space: pre-wrap; }
+  .user { align-self: flex-end; background: #e7f0d8; }
+  .bot { align-self: flex-start; background: white; border: 1px solid var(--line); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 14px 8px; }
+  .chips button { font-size: 14px; }
+  form { display: flex; gap: 8px; padding: 10px 14px 14px; }
+  form input { flex: 1; }
+  .enviar { background: var(--ink); color: var(--sheet); border: 0; padding: 10px 14px; }
+  .banco {
+    background: var(--bank);
+    color: #f3f7fb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 28px 20px;
+    border-color: var(--bank);
+  }
+  .banco header { padding: 0; color: #b7c9da; }
+  .monto { font-family: var(--serif); font-size: 52px; margin: 8px 0 0; letter-spacing: -0.04em; }
+  .aro {
+    width: 148px; height: 148px; margin: 22px 0;
+    border-radius: 50%;
+    border: 8px solid #2a4664;
+    display: grid; place-items: center;
+    font-size: 15px;
+  }
+  .banco.espera .aro { border-color: var(--ring); animation: pulso 1.6s ease-in-out infinite; }
+  .banco.listo .aro { border-color: #8ddeaf; }
+  @keyframes pulso { 50% { transform: scale(1.04); } }
+  #cara { background: #f3f7fb; color: var(--bank); border: 0; padding: 12px 16px; font-weight: 700; }
+  #cara:disabled { opacity: .45; cursor: default; }
+  .ley { max-width: 42ch; color: #b7c9da; font-size: 14px; margin: 14px 0 0; }
+  .cajones { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 14px 0 28px; }
+  .hoja { padding-bottom: 12px; background-image: repeating-linear-gradient(var(--sheet), var(--sheet) 27px, #e7eef2 28px); }
+  .hoja h2 { margin: 0 0 8px; font-size: 18px; background: var(--sheet); }
+  .hoja.activa { box-shadow: inset 4px 0 0 var(--bank); }
+  ul { list-style: none; margin: 0; padding: 0 14px; }
+  li { padding: 7px 0; border-bottom: 1px solid #e4ddd2; display: flex; justify-content: space-between; gap: 8px; }
+  .vacio { color: var(--muted); padding: 0 14px; }
+  .pagado, .confirmada { color: var(--paid); }
+  .pendiente, .apartada { color: var(--stamp); }
+  @media (max-width: 980px) {
+    .escena, .cajones, .riel { grid-template-columns: 1fr; }
+    .monto { font-size: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .banco.espera .aro { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="llave" id="llave">
+  <input id="k" type="password" placeholder="Clave de esta máquina" aria-label="Clave">
+  <button type="button" id="entrar">Entrar</button>
+</div>
+<div id="mesa" hidden>
+  <header>
+    <div>
+      <h1>Anillo</h1>
+      <p>Dos cuentas: la tuya y la del negocio. El negocio se parte en servicios y bienes, porque el impuesto no es el mismo. Tú cobras. La mesa aparta lo del SAT.</p>
+    </div>
+    <a href="/demo">Solo el chat</a>
+  </header>
+  <div class="riel" id="orgs">
+    <div class="paso" id="org-persona"><strong>Persona</strong><span>Gastos, meta, hábitos</span></div>
+    <div class="paso" id="org-servicios"><strong>Servicios</strong><span>Estética. IVA 16% e ISR sobre el ingreso</span></div>
+    <div class="paso" id="org-bienes"><strong>Productos</strong><span>Los vende la estética. IVA según el producto e ISR sobre el margen</span></div>
+    <div class="paso" id="org-banco"><strong>Banco</strong><span>Solo él marca el pago</span></div>
+  </div>
+  <main>
+    <section class="escena">
+      <section class="fono">
+        <header>
+          <strong id="rol">Cliente</strong>
+          <div class="quien">
+            <button type="button" id="soy-cliente" class="sel">Cliente</button>
+            <button type="button" id="soy-dueno">Dueño</button>
+          </div>
+        </header>
+        <div id="log" aria-live="polite"></div>
+        <div class="chips">
+          <button type="button" data-texto="quiero comprar una cita para el peluquero">Pedir corte</button>
+          <button type="button" data-texto="va">Ver horarios</button>
+          <button type="button" data-texto="el de las 5">El de las 5</button>
+          <button type="button" data-texto="quiero un jabón">Pedir jabón</button>
+          <button type="button" data-texto="quiero leche">Pedir leche</button>
+          <button type="button" data-texto="gasté 80 en café">Anotar un café</button>
+          <button type="button" data-texto="quiero ahorrar 500 para unas vacaciones">Ahorrar</button>
+          <button type="button" data-texto="cómo gasto">Cómo gasto</button>
+          <button type="button" data-texto="factura tinte 6 piezas a 80" data-rol="dueno">Cargar factura</button>
+          <button type="button" data-texto="existencias" data-rol="dueno">Ver almacén</button>
+        </div>
+        <form id="f">
+          <input id="texto" placeholder="O escríbelo tú" autocomplete="off" aria-label="Mensaje">
+          <button class="enviar">Enviar</button>
+        </form>
+      </section>
+      <section class="banco" id="banco">
+        <header>Tu banca</header>
+        <p class="monto" id="monto">$0.00</p>
+        <div class="aro" id="aro">Sin cobro</div>
+        <button type="button" id="cara" disabled>Confirmar con Face ID</button>
+        <p class="ley">En vivo, pey manda este aviso firmado después de que tu banco acepta la cara o la huella. Esta mesa aplica ese mismo registro en local.</p>
+      </section>
+    </section>
+    <section class="cajones">
+      <article class="hoja" id="caja-agenda"><h2>Agenda</h2><ul id="citas"></ul></article>
+      <article class="hoja" id="caja-almacen"><h2>Almacén</h2><ul id="almacen"></ul></article>
+      <article class="hoja" id="caja-libro"><h2>Libro del negocio</h2><ul id="libro"></ul></article>
+      <article class="hoja" id="caja-memoria"><h2>Tu memoria</h2><ul id="memoria"></ul></article>
+    </section>
+  </main>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+let clave = params.get("k") || "";
+const cliente = "5522222222";
+const dueno = "5511111111";
+let telefono = cliente;
+let cobroPendiente = null;
+let ocupado = false;
+const llave = document.querySelector("#llave");
+const mesa = document.querySelector("#mesa");
+
+function entrar() {
+  if (!clave) return;
+  llave.hidden = true;
+  mesa.hidden = false;
+  pintar();
+  setInterval(pintar, 2000);
+}
+document.querySelector("#entrar").onclick = () => { clave = document.querySelector("#k").value.trim(); entrar(); };
+if (clave) entrar();
+
+document.querySelector("#soy-cliente").onclick = () => elegir(cliente, "Cliente");
+document.querySelector("#soy-dueno").onclick = () => elegir(dueno, "Dueño");
+function elegir(tel, nombre) {
+  telefono = tel;
+  document.querySelector("#rol").textContent = nombre;
+  document.querySelector("#soy-cliente").classList.toggle("sel", tel === cliente);
+  document.querySelector("#soy-dueno").classList.toggle("sel", tel === dueno);
+  pintar();
+}
+
+document.querySelectorAll(".chips button").forEach((b) => {
+  b.onclick = () => {
+    if (b.dataset.rol === "dueno") elegir(dueno, "Dueño");
+    else if (telefono === dueno && b.dataset.rol !== "dueno") elegir(cliente, "Cliente");
+    decir(b.dataset.texto);
+  };
+});
+document.querySelector("#f").onsubmit = (ev) => {
+  ev.preventDefault();
+  const texto = document.querySelector("#texto").value.trim();
+  document.querySelector("#texto").value = "";
+  if (texto) decir(texto);
+};
+
+async function decir(texto) {
+  if (ocupado) return;
+  ocupado = true;
+  const r = await fetch("/api/chat?k=" + encodeURIComponent(clave) + "&modo=simulacion", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({telefono10: telefono, texto})
+  });
+  ocupado = false;
+  if (!r.ok) return;
+  await pintar();
+}
+
+document.querySelector("#cara").onclick = async () => {
+  if (!cobroPendiente || ocupado) return;
+  ocupado = true;
+  const boton = document.querySelector("#cara");
+  boton.disabled = true;
+  boton.textContent = "Leyendo el rostro…";
+  await new Promise((ok) => setTimeout(ok, 900));
+  const r = await fetch("/api/simular-banco?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({cobro_id: cobroPendiente})
+  });
+  ocupado = false;
+  boton.textContent = r.ok ? "El banco ya avisó" : "No se pudo confirmar";
+  await pintar();
+};
+
+async function pintar() {
+  const r = await fetch("/api/tablero?k=" + encodeURIComponent(clave) + "&telefono=" + telefono);
+  if (!r.ok) return;
+  const d = await r.json();
+  const log = document.querySelector("#log");
+  log.replaceChildren();
+  if (!d.chat.length) {
+    const p = document.createElement("p");
+    p.className = "vacio";
+    p.textContent = "Escribe, o usa un botón. Empieza por pedir el corte.";
+    log.appendChild(p);
+  }
+  for (const m of d.chat) {
+    const b = document.createElement("div");
+    b.className = "b " + (m.rol === "user" ? "user" : "bot");
+    b.textContent = m.contenido;
+    log.appendChild(b);
+  }
+  log.scrollTop = log.scrollHeight;
+  document.querySelector("#org-persona").classList.toggle("activo", d.seccion === "memoria");
+  document.querySelector("#org-servicios").classList.toggle("activo", d.seccion === "agenda" || d.seccion === "cobranza");
+  document.querySelector("#org-bienes").classList.toggle("activo", d.seccion === "almacen");
+  document.querySelector("#org-banco").classList.toggle("activo", !!d.pendiente);
+  const banco = document.querySelector("#banco");
+  banco.classList.toggle("espera", !!d.pendiente);
+  banco.classList.toggle("listo", !d.pendiente && d.pagos.some((p) => p.evento === "simulacion_local"));
+  cobroPendiente = d.pendiente ? d.pendiente.id : null;
+  document.querySelector("#monto").textContent = d.pendiente ? d.pendiente.monto : (d.pagos[0] ? d.pagos[0].monto : "$0.00");
+  document.querySelector("#aro").textContent = d.pendiente ? "Face ID" : (d.pagos[0] ? "Pagado" : "Sin cobro");
+  const cara = document.querySelector("#cara");
+  cara.disabled = !d.pendiente || ocupado;
+  if (d.pendiente) cara.textContent = "Confirmar con Face ID";
+  lista("#citas", d.citas, (c) => c.inicio.slice(0, 16).replace("T", " "), (c) => c.estado === "confirmada" ? "en la agenda" : "espera al banco", "La agenda se llena cuando el banco confirma.");
+  lista("#almacen", d.almacen, (a) => a.nombre, (a) => String(a.existencia), "Vacío. El dueño carga una factura.");
+  const libro = [
+    {izq: "Cobrado", der: d.mes.cobrado},
+    {izq: "Por cobrar", der: d.mes.por_cobrar},
+    {izq: "Gastos del negocio", der: d.mes.gastos},
+    {izq: "Apartado SAT", der: d.mes.apartado},
+    {izq: "Puedes usar", der: d.mes.disponible},
+    ...d.cobros.slice(0, 3).map((c) => ({izq: c.concepto, der: c.estado + " " + c.monto}))
+  ];
+  lista("#libro", libro, (x) => x.izq, (x) => x.der, "");
+  const memoria = [
+    ...d.metas.map((m) => ({izq: "Meta " + m.nombre, der: m.meta})),
+    ...d.gastos.map((g) => ({izq: g.concepto + " · " + (g.categoria || ""), der: g.monto}))
+  ];
+  lista("#memoria", memoria, (x) => x.izq, (x) => x.der, "Todavía no anotas gastos personales.");
+  document.querySelector("#caja-agenda").classList.toggle("activa", d.tabla === "citas" || d.tabla === "cotizaciones");
+  document.querySelector("#caja-almacen").classList.toggle("activa", d.tabla === "productos");
+  document.querySelector("#caja-libro").classList.toggle("activa", d.tabla === "movimientos" || d.tabla === "cobros");
+  document.querySelector("#caja-memoria").classList.toggle("activa", d.tabla === "gastos_personales");
+}
+
+function nombreSeccion(s) {
+  return {agenda: "Agenda", cobranza: "Cobranza", almacen: "Almacén", contabilidad: "Contabilidad", memoria: "Memoria", charla: "Charla"}[s] || s;
+}
+
+function lista(sel, items, izq, der, vacio) {
+  const ul = document.querySelector(sel);
+  ul.replaceChildren();
+  if (!items.length && vacio) {
+    const li = document.createElement("li");
+    li.textContent = vacio;
+    ul.appendChild(li);
+    return;
+  }
+  for (const item of items) {
+    const li = document.createElement("li");
+    const a = document.createElement("span");
+    const b = document.createElement("span");
+    a.textContent = izq(item);
+    b.textContent = der(item);
+    b.className = der(item).split(" ")[0];
+    li.append(a, b);
+    ul.appendChild(li);
+  }
+}
+</script>
+</body>
+</html>

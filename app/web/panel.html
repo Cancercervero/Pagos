@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel</title>
+<link rel="stylesheet" href="/marca/tokens.css">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--sans); background: var(--cantera); color: var(--tinta); }
+  header { display: flex; justify-content: space-between; align-items: end; padding: 28px 36px 8px; }
+  h1 { margin: 0; font-weight: 650; letter-spacing: -0.03em; }
+  .sub { color: #b7c4b4; margin-top: 4px; }
+  main { padding: 12px 36px 40px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .card { background: var(--hoja); border-radius: 16px; padding: 16px 18px; }
+  .card span { display: block; color: #b7c4b4; font-size: 13px; }
+  .card strong { font-size: 32px; letter-spacing: -0.04em; }
+  .grid { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: 14px; margin-top: 14px; }
+  .panel { background: var(--hoja); border-radius: 16px; padding: 18px; min-height: 280px; }
+  h2 { margin: 0 0 12px; font-size: 16px; }
+  ul { list-style: none; padding: 0; margin: 0; }
+  li { padding: 8px 0; border-bottom: 1px solid #2a3b34; display: flex; justify-content: space-between; gap: 12px; }
+  .pagado { color: #b6f25c; }
+  .pendiente { color: #f0d48a; }
+  .expirado, .fallido { color: #f0a3a3; }
+  button { background: var(--jamaica); color: var(--hoja); border: 0; border-radius: 999px; padding: 12px 18px; font-weight: 700; cursor: pointer; }
+  img.qr { width: min(280px, 100%); background: white; padding: 12px; border-radius: 12px; }
+  .flash { animation: pago 1.2s ease; }
+  @keyframes pago { from { background: #b6f25c; color: #142018; } }
+  .nota { color: #b7c4b4; font-size: 13px; margin-top: 18px; }
+  #llave { display: flex; gap: 8px; padding: 24px 36px; }
+  #llave[hidden], #app[hidden] { display: none !important; }
+  #llave input { background: #1a2823; color: inherit; border: 1px solid #345246; border-radius: 10px; padding: 10px 12px; }
+  @media (max-width: 900px) { .cards, .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="llave">
+  <input id="k" placeholder="Clave del panel" type="password">
+  <button type="button" id="entrar">Entrar</button>
+</div>
+<div id="app" hidden>
+  <header>
+    <div>
+      <h1 id="negocio">Panel</h1>
+      <div class="sub" id="simulado"></div>
+    </div>
+    <button type="button" id="probar">Cobro de prueba $1</button>
+  </header>
+  <main>
+    <section class="cards">
+      <div class="card"><span>Cobrado</span><strong id="cobrado">$0.00</strong></div>
+      <div class="card"><span>Por cobrar</span><strong id="porcobrar">$0.00</strong></div>
+      <div class="card"><span>Gastos</span><strong id="gastos">$0.00</strong></div>
+      <div class="card"><span>Utilidad</span><strong id="utilidad">$0.00</strong></div>
+    </section>
+    <section class="grid">
+      <div class="panel" id="feedbox">
+        <h2>En vivo</h2>
+        <ul id="feed"></ul>
+        <h2 style="margin-top:18px">Cobros</h2>
+        <ul id="cobros"></ul>
+      </div>
+      <div class="panel">
+        <h2>Cobro en mostrador</h2>
+        <div id="qrbox">Todavía no hay un QR pendiente.</div>
+        <h2 style="margin-top:18px">Citas</h2>
+        <ul id="citas"></ul>
+      </div>
+    </section>
+    <p class="nota">Los pagos se confirman en el servidor. Esta pantalla solo observa.</p>
+  </main>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+let clave = params.get("k") || "";
+const pagados = new Set();
+const llave = document.querySelector("#llave");
+const app = document.querySelector("#app");
+document.querySelector("#entrar").onclick = () => {
+  clave = document.querySelector("#k").value.trim();
+  if (clave) arrancar();
+};
+document.querySelector("#probar").onclick = async () => {
+  const r = await fetch("/api/cobro-prueba?k=" + encodeURIComponent(clave), {method: "POST"});
+  if (!r.ok) { alert("No pude crear el cobro"); return; }
+  cargar();
+};
+function arrancar() {
+  llave.hidden = true;
+  app.hidden = false;
+  cargar();
+  setInterval(cargar, 2000);
+}
+async function cargar() {
+  const r = await fetch("/api/estado?k=" + encodeURIComponent(clave));
+  if (r.status === 401) { app.hidden = true; llave.hidden = false; return; }
+  const data = await r.json();
+  document.querySelector("#negocio").textContent = data.negocio || "Panel";
+  document.querySelector("#simulado").textContent = data.simulado || "";
+  document.querySelector("#cobrado").textContent = data.mes.cobrado;
+  document.querySelector("#porcobrar").textContent = data.mes.por_cobrar;
+  document.querySelector("#gastos").textContent = data.mes.gastos;
+  document.querySelector("#utilidad").textContent = data.mes.utilidad;
+  document.querySelector("#feed").innerHTML = data.feed.map(f => `<li>${esc(f.contenido)}</li>`).join("") || "<li>Sin eventos</li>";
+  document.querySelector("#cobros").innerHTML = data.cobros.map(c => {
+    const nuevo = c.estado === "pagado" && !pagados.has(c.id);
+    if (c.estado === "pagado") pagados.add(c.id);
+    const tardio = c.tardio ? " · tarde" : "";
+    return `<li class="${esc(c.estado)} ${nuevo ? "flash" : ""}"><span>${esc(c.concepto)}</span><b>${esc(c.monto)} · ${esc(c.estado)}${tardio}</b></li>`;
+  }).join("");
+  document.querySelector("#citas").innerHTML = data.citas.map(c => `<li><span>${esc(c.quien)}</span><b>${esc(c.inicio)} · ${esc(c.estado)}</b></li>`).join("") || "<li>Sin citas</li>";
+  const box = document.querySelector("#qrbox");
+  box.innerHTML = data.qr
+    ? `<img class="qr" alt="QR CoDi" src="/qr/${data.qr.id}.png"><p>${esc(data.qr.concepto)} · ${esc(data.qr.monto)}</p>`
+    : "Todavía no hay un QR pendiente.";
+}
+function esc(s) { return String(s ?? "").replace(/[&<>]/g, ch => ({ "&":"&amp;","<":"&lt;",">":"&gt;" }[ch])); }
+if (clave) arrancar();
+</script>
+</body>
+</html>

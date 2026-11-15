@@ -1,0 +1,29 @@
+{
+  "_nota": "Dos organizaciones, como un organigrama de una sola tarea por agente. No comparten tablas.",
+  "persona": {
+    "nombre": "Tu dinero",
+    "agentes": [
+      {"id": "memoria", "puesto": "Memoria", "hace": "Anota gastos, metas y hábitos", "tabla": "gastos_personales"}
+    ]
+  },
+  "servicios": {
+    "nombre": "Estética Demo",
+    "giro": "servicios",
+    "impuesto": "IVA 16% incluido. ISR RESICO sobre el ingreso sin IVA.",
+    "agentes": [
+      {"id": "agenda", "puesto": "Agenda", "hace": "Citas, solo después de que el banco confirma", "tabla": "citas"},
+      {"id": "cobranza", "puesto": "Cobranza", "hace": "Arma el cobro. No lo marca pagado", "tabla": "cobros"},
+      {"id": "contador", "puesto": "Contador", "hace": "Aparta IVA e ISR del cobro", "tabla": "movimientos"}
+    ]
+  },
+  "bienes": {
+    "nombre": "Productos de la estética",
+    "giro": "bienes",
+    "impuesto": "IVA 0% en canasta básica y 16% en el resto. ISR RESICO sobre la utilidad, no sobre la venta.",
+    "agentes": [
+      {"id": "almacen", "puesto": "Almacén", "hace": "Entradas por factura y salidas al cobrar", "tabla": "productos"},
+      {"id": "margen", "puesto": "Margen", "hace": "Precio menos costo", "tabla": "movimientos"},
+      {"id": "contador", "puesto": "Contador", "hace": "Aparta el IVA del producto y el ISR de la utilidad", "tabla": "movimientos"}
+    ]
+  }
+}

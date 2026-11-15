@@ -91,7 +91,9 @@
   .cuadros button { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 112px; text-align: left; padding: 12px; border-radius: 18px; background: var(--papel); box-shadow: inset 0 0 0 1px var(--borde); }
   .cuadros .nombre { font-weight: 600; }
   .cuadros .quiere { font-weight: 400; color: var(--suave); font-size: 14px; }
-  .cuadros .sello, .alerta { background: #f2c14e; color: #3a2410; border-radius: 999px; padding: 3px 8px; font-size: 13px; font-weight: 600; }
+  .cuadros .sello, .pieza .sello, .alerta { background: #f2c14e; color: #3a2410; border-radius: 999px; padding: 3px 8px; font-size: 13px; font-weight: 600; }
+  .merma { display: flex; gap: 6px; grid-column: 1 / -1; }
+  .merma button { flex: 1; min-height: 36px; border-radius: 12px; background: var(--hoja); font-size: 13px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--borde); }
   .alerta { display: block; border-radius: 14px; padding: 10px 12px; }
   .perfil { background: var(--papel); border-radius: 22px; padding: 14px 14px 12px; box-shadow: inset 0 0 0 1px var(--borde); display: grid; gap: 10px; }
   .perfil .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -175,7 +177,31 @@
   .malla .nombre { font-weight: 600; font-size: 15px; }
   .malla .grupo { grid-column: 1 / -1; margin: 8px 0 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--suave); }
   #cuerpo .fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--borde); }
+  .caja-busca { display: flex; gap: 8px; margin-bottom: 8px; }
+  .caja-busca input, .precio-fila input { flex: 1; min-height: 44px; border: 0; border-radius: 14px; padding: 0 12px; background: var(--papel); box-shadow: inset 0 0 0 1px var(--borde); }
+  .caja-busca button, .precio-fila button { min-height: 44px; border-radius: 14px; padding: 0 12px; background: var(--hoja); font-weight: 600; box-shadow: inset 0 0 0 1px var(--borde); }
+  .ticket { margin-top: 8px; background: var(--papel); border-radius: 18px; padding: 12px; white-space: pre-wrap; box-shadow: inset 0 0 0 1px var(--borde); }
+  .mostrador { display: grid; gap: 12px; }
+  .recibo { background: var(--papel); border-radius: 22px; padding: 14px 14px 12px; box-shadow: inset 0 0 0 1px var(--borde); }
+  .recibo .vacio { margin: 8px 0 4px; color: var(--suave); }
+  .recibo .renglon { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; padding: 8px 0; }
+  .recibo .renglon b { font-family: var(--serif); font-size: 18px; font-weight: 560; }
+  .recibo .renglon span { color: var(--suave); font-size: 14px; }
+  .recibo .qty { display: flex; align-items: center; gap: 8px; }
+  .recibo .qty button { width: 36px; height: 36px; border-radius: 50%; background: var(--hoja); font-size: 20px; box-shadow: inset 0 0 0 1px var(--borde); }
+  .recibo .total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--borde); }
+  .recibo .total span { color: var(--suave); }
+  .recibo .total strong { font-family: var(--serif); font-size: 34px; font-weight: 680; letter-spacing: -0.03em; }
+  .qr-pago { display: grid; justify-items: center; gap: 6px; background: #fff; border-radius: 22px; padding: 16px 12px 14px; text-align: center; }
+  .qr-pago img { width: 220px; height: 220px; }
+  .qr-pago strong { font-family: var(--serif); font-size: 28px; font-weight: 680; }
+  .qr-pago p { margin: 0; color: var(--suave); max-width: 28ch; }
+  button.secundario { display: block; width: 100%; margin-top: 2px; color: var(--hilo); font-weight: 600; padding: 8px; }
+  .factura-carga { display: grid; gap: 8px; margin-bottom: 4px; }
+  .factura-carga button { width: 100%; background: var(--papel); color: var(--tinta); border-radius: 16px; padding: 14px; font-weight: 600; box-shadow: inset 0 0 0 1px var(--borde); }
+  .factura-carga button.ancho { background: var(--rosa); color: #fff6ec; box-shadow: none; }
   #cuerpo button.ancho { display: block; width: 100%; margin-top: 8px; background: var(--rosa); color: #fff6ec; border-radius: 16px; padding: 12px; font-weight: 700; }
+  #cuerpo button.ancho:disabled { opacity: .4; }
   #frase { display: none; }
   .flecha { color: #14a39a; font-size: 22px; line-height: 1; }
   .volver { display: inline-flex; align-items: center; gap: 6px; background: var(--papel); color: var(--rosa); font-weight: 600; border-radius: 999px; padding: 8px 14px; margin-bottom: 8px; box-shadow: inset 0 0 0 1px var(--borde); }
@@ -326,6 +352,12 @@ let citaAbierta = null;
 let diaAgenda = "";
 let pila = [];
 let carrito = {};
+let avisoCaja = "";
+let avisoAlmacen = "";
+let ticketCaja = "";
+let camaraCaja = false;
+let cobroCaja = null;
+let sondeoCaja = 0;
 let leyendo = false;
 
 function marcarTipo(tipo) {
@@ -595,6 +627,7 @@ document.querySelector("#volver").onclick = () => {
   if (pila.length) history.back();
 };
 window.addEventListener("popstate", () => {
+  camaraCaja = false;
   soltarCamara();
   pila.pop();
   aplicar();
@@ -1066,30 +1099,46 @@ function ficha(caja) {
 
 function cargador() {
   const form = document.createElement("form");
-  form.className = "linea";
+  form.className = "factura-carga";
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".xml,.pdf,.csv,.xlsx,.mp3,.m4a,.wav,.webm,.ogg,audio/*,application/pdf,text/xml";
-  input.setAttribute("aria-label", "Factura o lista");
-  const boton = document.createElement("button");
-  boton.textContent = "Cargar";
+  input.hidden = true;
+  input.setAttribute("aria-label", "Lista de la tienda");
   const nota = document.createElement("p");
   nota.className = "ayuda";
-  nota.textContent = "XML de factura, Excel, PDF o audio. Del XML salen el sku, las piezas y el precio de cada lote. Si el archivo no los trae, no se inventan.";
-  form.append(input, boton);
-  form.onsubmit = async (ev) => {
-    ev.preventDefault();
+  nota.textContent = "Excel de la tienda, la factura o una foto de tu lista. Los productos se acomodan solos.";
+  const opciones = [
+    ["Excel de la tienda", ".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv", false],
+    ["Factura", ".pdf,.xml,application/pdf", false],
+    ["Tomar foto", "image/*", true]
+  ];
+  for (const [texto, accept, foto] of opciones) {
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "ancho";
+    boton.textContent = texto;
+    boton.onclick = () => {
+      input.accept = accept;
+      if (foto) input.setAttribute("capture", "environment");
+      else input.removeAttribute("capture");
+      input.click();
+    };
+    form.appendChild(boton);
+  }
+  input.onchange = async () => {
     if (!input.files || !input.files[0]) return;
     const fd = new FormData();
     fd.append("archivo", input.files[0]);
     fd.append("telefono10", telefono);
-    boton.disabled = true;
+    nota.textContent = "Estoy leyendo " + input.files[0].name + "…";
     const r = await fetch("/api/cargar?k=" + encodeURIComponent(clave), {method: "POST", body: fd, headers: cabeceras()});
     const data = await r.json().catch(() => ({}));
     nota.textContent = data.nota || data.detail || "No pude cargar el archivo.";
-    boton.disabled = false;
+    input.value = "";
     if (r.ok) pintar();
   };
+  form.appendChild(input);
+  form.onsubmit = (ev) => ev.preventDefault();
   const caja = document.createElement("div");
   caja.append(nota, form);
   return caja;
@@ -1126,9 +1175,10 @@ async function seguridadVista(caja) {
 
 function soltarCamara() {
   leyendo = false;
-  const video = document.querySelector("#video-scan");
-  const stream = video && video.srcObject;
-  if (stream) stream.getTracks().forEach((t) => t.stop());
+  document.querySelectorAll("video.camara").forEach((video) => {
+    const stream = video.srcObject;
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+  });
 }
 
 function escanear(caja) {
@@ -1468,7 +1518,17 @@ function pedidoDe(pedido) {
 function textoMovimiento(m) {
   if (m.tipo === "salida") return "Salió " + m.cantidad;
   if (m.tipo === "entrada") return "Entró " + m.cantidad;
+  if (m.tipo === "merma") {
+    const nota = m.nota || "";
+    if (nota.indexOf("Caduc") >= 0) return "Caducó " + m.cantidad;
+    if (nota.indexOf("rompi") >= 0) return "Se rompió " + m.cantidad;
+    return "Se perdió " + m.cantidad;
+  }
   return "Conteo " + (m.nota && m.nota.indexOf("Sube") >= 0 ? "+" : "−") + m.cantidad;
+}
+
+function veCostos() {
+  return ((datos && datos.quien) || {}).rol === "dueno";
 }
 
 const ANAQUELES = [
@@ -1510,61 +1570,279 @@ function pesosDe(centavos) {
 
 function cajaVista(caja) {
   const productos = modulos().caja || [];
-  if (!productos.length) {
-    caja.appendChild(lineaSuave("La caja no tiene productos."));
-    return;
+  const busca = document.createElement("div");
+  busca.className = "caja-busca";
+  const campo = document.createElement("input");
+  campo.inputMode = "numeric";
+  campo.placeholder = "Código de barras";
+  campo.setAttribute("aria-label", "Código de barras");
+  campo.addEventListener("keydown", (ev) => {
+    if (ev.key === "Enter") agregarCodigo(campo.value);
+  });
+  const agregar = document.createElement("button");
+  agregar.type = "button";
+  agregar.textContent = "Sumar";
+  agregar.onclick = () => agregarCodigo(campo.value);
+  const camara = document.createElement("button");
+  camara.type = "button";
+  camara.textContent = "Cámara";
+  camara.onclick = () => leerBarras(caja);
+  busca.append(campo, camara, agregar);
+  caja.appendChild(busca);
+  if (avisoCaja) caja.appendChild(lineaSuave(avisoCaja));
+  const enTicket = productos.filter((p) => (carrito[p.sku] || 0) > 0 && p.precio_centavos > 0);
+  const total = enTicket.reduce((suma, p) => suma + carrito[p.sku] * p.precio_centavos, 0);
+  const recibo = document.createElement("div");
+  recibo.className = "recibo";
+  if (!enTicket.length) {
+    const vacio = document.createElement("p");
+    vacio.className = "vacio";
+    vacio.textContent = "Pasa el código. El ticket se arma solo.";
+    recibo.appendChild(vacio);
   }
-  for (const p of productos) {
+  for (const p of enTicket) {
+    const fila = document.createElement("div");
+    fila.className = "renglon";
+    const info = document.createElement("div");
+    const nombre = document.createElement("b");
+    nombre.textContent = p.nombre;
+    const detalle = document.createElement("span");
+    detalle.textContent = p.precio;
+    info.append(nombre, document.createElement("br"), detalle);
+    const qty = document.createElement("div");
+    qty.className = "qty";
+    const menos = document.createElement("button");
+    menos.type = "button";
+    menos.textContent = "−";
+    menos.setAttribute("aria-label", "Quitar uno de " + p.nombre);
+    menos.onclick = () => {
+      cobroCaja = null;
+      carrito[p.sku] = Math.max(0, (carrito[p.sku] || 0) - 1);
+      dibujar();
+    };
+    const n = document.createElement("b");
+    n.textContent = String(carrito[p.sku]);
+    qty.append(menos, n);
+    fila.append(info, qty);
+    recibo.appendChild(fila);
+  }
+  const pie = document.createElement("div");
+  pie.className = "total";
+  const etiqueta = document.createElement("span");
+  etiqueta.textContent = "Total";
+  const cifra = document.createElement("strong");
+  cifra.textContent = pesosDe(total);
+  pie.append(etiqueta, cifra);
+  recibo.appendChild(pie);
+  const tel = document.createElement("input");
+  tel.id = "ticket-tel";
+  tel.inputMode = "numeric";
+  tel.maxLength = 10;
+  tel.placeholder = "WhatsApp, si quieres mandar el ticket";
+  tel.setAttribute("aria-label", "WhatsApp de quien compra");
+  tel.style.cssText = "width:100%;min-height:44px;margin-top:10px;border:0;border-radius:14px;padding:0 12px;background:var(--hoja);box-shadow:inset 0 0 0 1px var(--borde)";
+  recibo.appendChild(tel);
+  caja.appendChild(recibo);
+  if (cobroCaja) {
+    const pago = document.createElement("div");
+    pago.className = "qr-pago";
+    const img = document.createElement("img");
+    img.alt = "Código para pagar";
+    img.src = cobroCaja.qr + "?k=" + encodeURIComponent(clave);
+    const monto = document.createElement("strong");
+    monto.textContent = cobroCaja.monto;
+    const nota = document.createElement("p");
+    nota.textContent = cobroCaja.estado === "pagado"
+      ? "El banco ya recibió el pago."
+      : "Código CoDi de " + (cobroCaja.quien || "Miriam") + ". Lo escaneas con el banco y el dinero entra a su cuenta. Aquí no se marca pagado.";
+    pago.append(img, monto, nota);
+    if (cobroCaja.ticket && cobroCaja.ticket !== cobroCaja.monto) {
+      const aparte = document.createElement("p");
+      aparte.textContent = "El ticket es " + cobroCaja.ticket + ". Este código cobra " + cobroCaja.monto + ".";
+      pago.appendChild(aparte);
+    }
+    caja.appendChild(pago);
+  } else {
+    const cobrar = document.createElement("button");
+    cobrar.type = "button";
+    cobrar.className = "ancho";
+    cobrar.textContent = "Cobrar";
+    cobrar.onclick = cobrarConQr;
+    caja.appendChild(cobrar);
+  }
+  const efectivo = document.createElement("button");
+  efectivo.type = "button";
+  efectivo.className = "secundario";
+  efectivo.textContent = "Cobrar en efectivo";
+  efectivo.onclick = cobrarCaja;
+  caja.appendChild(efectivo);
+  if (ticketCaja) {
+    const previo = document.createElement("p");
+    previo.className = "ticket";
+    previo.textContent = ticketCaja;
+    caja.appendChild(previo);
+  }
+  const titulo = document.createElement("p");
+  titulo.className = "grupo";
+  titulo.textContent = "Sin código";
+  caja.appendChild(titulo);
+  const conPrecio = productos.filter((p) => p.precio_centavos > 0 && p.existencia > 0);
+  if (!conPrecio.length) caja.appendChild(lineaSuave("Cuando un producto tenga precio de venta, aparece aquí para sumarlo con el dedo."));
+  for (const p of conPrecio) {
     const fila = document.createElement("div");
     fila.className = "fila";
     const nombre = document.createElement("div");
-    nombre.innerHTML = "<strong>" + p.nombre + "</strong><br><span>" + p.precio + " · quedan " + p.existencia + "</span>";
+    const strong = document.createElement("strong");
+    strong.textContent = p.nombre;
+    const span = document.createElement("span");
+    span.textContent = p.precio + " · quedan " + p.existencia;
+    nombre.append(strong, document.createElement("br"), span);
     const mas = document.createElement("button");
     mas.type = "button";
     mas.textContent = (carrito[p.sku] || 0) ? "×" + carrito[p.sku] : "+";
-    mas.onclick = () => {
-      if ((carrito[p.sku] || 0) >= p.existencia) return;
-      carrito[p.sku] = (carrito[p.sku] || 0) + 1;
-      dibujar();
-    };
+    mas.onclick = () => agregarCodigo(p.codigo || p.sku);
     fila.append(nombre, mas);
     caja.appendChild(fila);
   }
-  const total = productos.reduce((suma, p) => suma + (carrito[p.sku] || 0) * p.precio_centavos, 0);
-  const pie = document.createElement("p");
-  pie.className = "alerta";
-  pie.textContent = "Total " + pesosDe(total);
-  caja.appendChild(pie);
-  const efectivo = document.createElement("button");
-  efectivo.type = "button";
-  efectivo.className = "ancho";
-  efectivo.textContent = "Cobrar en efectivo";
-  efectivo.onclick = cobrarCaja;
-  const codi = document.createElement("button");
-  codi.type = "button";
-  codi.className = "ancho";
-  codi.textContent = "Cobrar con CoDi";
-  codi.onclick = () => empujar({vista: "banco", nombre: "Banco"});
-  caja.append(efectivo, codi);
-  caja.appendChild(lineaSuave("CoDi se confirma en Banco. Aquí no se marca pagado."));
+  if (camaraCaja) leerBarras(caja);
 }
 
-async function cobrarCaja() {
+async function cobrarConQr() {
   const lineas = Object.entries(carrito).filter(([, n]) => n > 0).map(([sku, cantidad]) => ({sku, cantidad}));
-  if (!lineas.length) return;
-  const r = await fetch("/api/venta?k=" + encodeURIComponent(clave), {
+  avisoCaja = "";
+  const r = await fetch("/api/caja/cobro?k=" + encodeURIComponent(clave), {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({telefono10: telefono, lineas})
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
-    alert(data.detail || "No se pudo cobrar.");
+    avisoCaja = data.detail || "No pude crear el código de CoDi.";
+    dibujar();
+    return;
+  }
+  cobroCaja = {id: data.cobro_id, monto: data.monto, ticket: data.ticket, qr: data.qr, quien: data.quien || "Miriam", estado: "pendiente"};
+  seguirCobro();
+  dibujar();
+}
+
+function seguirCobro() {
+  if (sondeoCaja) return;
+  sondeoCaja = setInterval(async () => {
+    if (!cobroCaja || cobroCaja.estado === "pagado") {
+      clearInterval(sondeoCaja);
+      sondeoCaja = 0;
+      return;
+    }
+    await pintar();
+    const fresco = ((datos && datos.cobros) || []).find((c) => c.id === cobroCaja.id);
+    if (fresco && fresco.estado === "pagado") {
+      cobroCaja.estado = "pagado";
+      cobroCaja.monto = fresco.monto || cobroCaja.monto;
+      clearInterval(sondeoCaja);
+      sondeoCaja = 0;
+      dibujar();
+    }
+  }, 4000);
+}
+
+function agregarCodigo(texto) {
+  const codigo = String(texto || "").trim().toLowerCase();
+  if (!codigo) return;
+  const p = (modulos().caja || []).find((item) => String(item.codigo || item.sku).toLowerCase() === codigo || item.sku === codigo);
+  if (!p) {
+    avisoCaja = "Ese código no está en la caja.";
+    dibujar();
+    return;
+  }
+  if (!p.precio_centavos) {
+    avisoCaja = p.nombre + " no tiene precio de venta.";
+    dibujar();
+    return;
+  }
+  if ((carrito[p.sku] || 0) >= p.existencia) {
+    avisoCaja = "Ya no hay más " + p.nombre + ".";
+    dibujar();
+    return;
+  }
+  carrito[p.sku] = (carrito[p.sku] || 0) + 1;
+  cobroCaja = null;
+  avisoCaja = "Entré " + p.nombre + " al ticket.";
+  dibujar();
+}
+
+async function leerBarras(caja) {
+  camaraCaja = true;
+  soltarCamara();
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    camaraCaja = false;
+    avisoCaja = "Este teléfono no soltó la cámara.";
+    dibujar();
+    return;
+  }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+  } catch (e) {
+    camaraCaja = false;
+    avisoCaja = "No pude usar la cámara. Acepta el permiso o escribe el código.";
+    dibujar();
+    return;
+  }
+  let video = document.querySelector("#video-caja");
+  if (!video) {
+    video = document.createElement("video");
+    video.id = "video-caja";
+    video.className = "camara";
+    video.setAttribute("playsinline", "");
+    video.muted = true;
+    caja.prepend(video);
+  }
+  video.srcObject = stream;
+  await video.play();
+  if (!("BarcodeDetector" in window)) {
+    avisoCaja = "La cámara está abierta, pero este visor no lee códigos. Escríbelo arriba.";
+    return;
+  }
+  const det = new BarcodeDetector({formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "qr_code"]});
+  leyendo = true;
+  let ultimo = "";
+  let cuando = 0;
+  const paso = async () => {
+    if (!leyendo || !video.isConnected) return;
+    try {
+      const codes = await det.detect(video);
+      const valor = codes.length ? String(codes[0].rawValue || "") : "";
+      if (valor && (valor !== ultimo || Date.now() - cuando > 1500)) {
+        ultimo = valor;
+        cuando = Date.now();
+        agregarCodigo(valor);
+      }
+    } catch (e) {}
+    if (leyendo) setTimeout(paso, 350);
+  };
+  paso();
+}
+
+async function cobrarCaja() {
+  const lineas = Object.entries(carrito).filter(([, n]) => n > 0).map(([sku, cantidad]) => ({sku, cantidad}));
+  if (!lineas.length) return;
+  const tel = ((document.querySelector("#ticket-tel") || {}).value || "").trim();
+  const r = await fetch("/api/venta?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({telefono10: telefono, cliente10: tel, lineas})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) {
+    avisoCaja = data.detail || "No se pudo cobrar.";
+    dibujar();
     return;
   }
   carrito = {};
+  ticketCaja = data.ticket || ("Venta registrada: " + data.total);
+  avisoCaja = data.aviso || "Ticket listo.";
   await pintar();
-  alert("Venta registrada: " + data.total);
 }
 
 function pedidosVista(caja) {
@@ -1638,37 +1916,78 @@ function personalVista(caja) {
 }
 
 function almacenVista(caja) {
-  const productos = (datos && datos.almacen) || [];
-  const pedidos = ((datos && datos.chats) || []).filter((c) => c.rol === "proveedor" && c.pedido);
-  if (pedidos.length) {
-    const linea = document.createElement("p");
-    linea.className = "alerta";
-    const p = pedidos[0].pedido;
-    linea.textContent = pedidos[0].nombre + " · " + p.cuando + ". " + p.cotejo;
-    caja.appendChild(linea);
+  caja.appendChild(cargador());
+  const correo = document.createElement("button");
+  correo.type = "button";
+  correo.className = "secundario";
+  correo.textContent = "Revisar correo";
+  correo.onclick = () => revisarCorreo(correo);
+  caja.appendChild(correo);
+  if (veCostos() && datos && (datos.valor_inventario || datos.piezas_sin_llegada)) {
+    let texto = datos.valor_inventario
+      ? "El inventario vale " + datos.valor_inventario + ". Lo que llegó primero es lo que sale primero."
+      : "Todavía no hay precio de llegada.";
+    if (datos.piezas_sin_llegada) {
+      const n = datos.piezas_sin_llegada;
+      texto += " " + n + (n === 1 ? " pieza todavía no trae" : " piezas todavía no traen") + " precio de llegada.";
+    }
+    caja.appendChild(lineaSuave(texto));
   }
+  if (avisoAlmacen) caja.appendChild(lineaSuave(avisoAlmacen));
+  const entradas = (datos && datos.entradas) || [];
+  if (entradas.length) {
+    const titulo = document.createElement("p");
+    titulo.className = "grupo";
+    titulo.textContent = "Facturas que ya entraron";
+    caja.appendChild(titulo);
+    for (const e of entradas) {
+      const n = e.piezas === 1 ? "1 producto" : e.piezas + " productos";
+      caja.appendChild(lineaSuave((e.folio || "Factura") + " · " + n));
+    }
+  }
+  const productos = (datos && datos.almacen) || [];
   const malla = document.createElement("div");
   malla.className = "malla";
   for (const [nombre, icono, tinta] of ANAQUELES) {
     const deAhi = productos.filter((item) => (item.seccion || "Varios") === nombre);
     const piezas = deAhi.reduce((suma, item) => suma + item.existencia, 0);
+    let pie = deAhi.length ? piezas + (piezas === 1 ? " pieza" : " piezas") : "Vacío";
+    if (deAhi.some((item) => item.existencia <= item.minimo)) pie += " · surtir";
     const b = document.createElement("button");
     b.type = "button";
-    b.innerHTML = '<span class="pozo ' + tinta + '">' + (D[icono] || "") + '</span><span class="nombre">' + nombre + '</span><span class="piezas">' + (deAhi.length ? piezas + (piezas === 1 ? " pieza" : " piezas") : "Vacío") + '</span>';
+    b.innerHTML = '<span class="pozo ' + tinta + '">' + (D[icono] || "") + '</span><span class="nombre">' + nombre + '</span><span class="piezas">' + pie + '</span>';
     b.onclick = () => empujar({vista: "anaquel", nombre: nombre, seccion: nombre});
     malla.appendChild(b);
   }
   caja.appendChild(malla);
-  caja.appendChild(cargador());
+}
+
+async function revisarCorreo(boton) {
+  boton.disabled = true;
+  const r = await fetch("/api/almacen/correo?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: cabeceras(true),
+    body: JSON.stringify({telefono10: telefono})
+  });
+  const data = await r.json().catch(() => ({}));
+  boton.disabled = false;
+  avisoAlmacen = data.nota || data.detail || "No pude revisar el correo.";
+  if (r.ok) await pintar();
+  else dibujar();
 }
 
 function anaquelDe(caja) {
   const nombre = (pila[pila.length - 1] || {}).seccion || "";
   const productos = ((datos && datos.almacen) || []).filter((item) => (item.seccion || "Varios") === nombre);
+  caja.appendChild(lineaSuave("Lo viejo queda al frente. Si caducó, se rompió o se perdió, no es venta."));
   if (!productos.length) {
     caja.appendChild(lineaSuave("Todavía no hay productos en " + nombre + "."));
     return;
   }
+  productos.sort((a, b) => {
+    const orden = (item) => item.existencia <= 0 ? 0 : item.existencia <= item.minimo ? 1 : 2;
+    return orden(a) - orden(b) || String(a.nombre).localeCompare(String(b.nombre), "es");
+  });
   for (const p of productos) caja.appendChild(piezaDe(p));
 }
 
@@ -1681,14 +2000,26 @@ function piezaDe(p) {
   const info = document.createElement("div");
   const nombre = document.createElement("strong");
   nombre.textContent = p.nombre;
-  const sku = document.createElement("p");
-  sku.className = "suave";
-  sku.textContent = "SKU " + p.sku;
-  const costo = document.createElement("p");
-  costo.className = "suave";
-  const lotes = (p.lotes || []).map((lote) => lote.cantidad + " a " + lote.costo).join(" · ");
-  costo.textContent = lotes || precioDe(p);
-  info.append(nombre, sku, costo);
+  if (p.existencia <= 0) {
+    const sello = document.createElement("span");
+    sello.className = "sello";
+    sello.textContent = "Se acabó";
+    nombre.appendChild(document.createTextNode(" "));
+    nombre.appendChild(sello);
+  } else if (p.existencia <= p.minimo) {
+    const sello = document.createElement("span");
+    sello.className = "sello";
+    sello.textContent = "Hay que surtir";
+    nombre.appendChild(document.createTextNode(" "));
+    nombre.appendChild(sello);
+  }
+  info.append(nombre);
+  if ((p.lotes || []).length && veCostos()) {
+    const costo = document.createElement("p");
+    costo.className = "suave";
+    costo.textContent = textoLotes(p);
+    info.appendChild(costo);
+  }
   const lado = document.createElement("div");
   lado.className = "lado";
   const cuenta = document.createElement("b");
@@ -1715,7 +2046,40 @@ function piezaDe(p) {
     mov.style.gridColumn = "1 / -1";
     art.appendChild(mov);
   }
+  if (veCostos() && p.existencia > 0) {
+    const fila = document.createElement("div");
+    fila.className = "merma";
+    for (const [motivo, etiqueta] of [["caducidad", "Caducó"], ["dano", "Se rompió"], ["perdida", "Se perdió"]]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = etiqueta;
+      b.onclick = () => anotarMerma(p.sku, motivo, b);
+      fila.appendChild(b);
+    }
+    art.appendChild(fila);
+  }
   return art;
+}
+
+function textoLotes(p) {
+  const lotes = p.lotes || [];
+  if (!lotes.length) return veCostos() ? (precioDe(p) === "Sin precio" ? "Sin lote" : precioDe(p)) : "Sin lote";
+  return lotes.map((lote, i) => {
+    const lugar = i === 0 ? "Llegó a" : "Atrás";
+    const piezas = lote.cantidad + (lote.cantidad === 1 ? " pieza" : " piezas");
+    return lugar + (veCostos() && lote.costo ? " " + lote.costo : "") + " · " + piezas;
+  }).join(" · ");
+}
+
+async function anotarMerma(sku, motivo, boton) {
+  boton.disabled = true;
+  const r = await fetch("/api/almacen/merma?k=" + encodeURIComponent(clave), {
+    method: "POST",
+    headers: cabeceras(true),
+    body: JSON.stringify({telefono10: telefono, sku: sku, motivo: motivo})
+  });
+  boton.disabled = false;
+  if (r.ok) pintar();
 }
 
 async function contar(sku, delta, boton) {

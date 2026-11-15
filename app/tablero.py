@@ -60,7 +60,7 @@ def foto(telefono10: str | None, hilo: str | None = None, con: str | None = None
         )
         cobros = filas(conn.execute("SELECT * FROM cobros ORDER BY id DESC LIMIT 8").fetchall())
         pagos = filas(conn.execute("SELECT * FROM pagos ORDER BY id DESC LIMIT 8").fetchall())
-        almacen = _almacen(conn)
+        almacen = _almacen(conn, ver_costos=(contacto or {}).get("rol") == "dueno")
         salidas = filas(
             conn.execute(
                 """SELECT m.tipo, m.cantidad, m.nota, p.nombre
@@ -98,6 +98,23 @@ def foto(telefono10: str | None, hilo: str | None = None, con: str | None = None
             ultimo = row["contenido"] if row else ""
         agenda = _agenda(conn)
         modulos = _modulos_negocio(conn)
+        valor_inventario = ""
+        piezas_sin_llegada = 0
+        if (contacto or {}).get("rol") == "dueno":
+            centavos = conn.execute(
+                "SELECT COALESCE(SUM(cantidad * costo_centavos), 0) AS v FROM lotes WHERE cantidad>0"
+            ).fetchone()["v"]
+            if int(centavos) > 0:
+                valor_inventario = fmt_mxn(int(centavos))
+            piezas_sin_llegada = int(
+                conn.execute(
+                    """SELECT COALESCE(SUM(p.existencia), 0) AS n FROM productos p
+                       WHERE p.existencia>0 AND NOT EXISTS (
+                         SELECT 1 FROM lotes l
+                         WHERE l.producto_id=p.id AND l.cantidad>0 AND l.costo_centavos>0
+                       )"""
+                ).fetchone()["n"]
+            )
     seccion, tabla = _seccion(ultimo, (contacto or {}).get("rol"))
     pendiente = next((c for c in cobros if c["estado"] == "pendiente" and c["metodo"] == "simulacion"), None)
     mes = resumen("mes")
@@ -134,6 +151,9 @@ def foto(telefono10: str | None, hilo: str | None = None, con: str | None = None
             for p in pagos
         ],
         "almacen": almacen,
+        "valor_inventario": valor_inventario,
+        "piezas_sin_llegada": piezas_sin_llegada,
+        "entradas": _entradas(conn),
         "salidas": salidas,
         "gastos": [
             {"concepto": g["concepto"], "categoria": g["categoria"], "monto": fmt_mxn(g["monto_centavos"]), "telefono": g["telefono10"]}
@@ -352,9 +372,10 @@ def _modulos_negocio(conn) -> dict:
             "precio": fmt_mxn(p["precio_centavos"]),
             "precio_centavos": int(p["precio_centavos"]),
             "existencia": int(p["existencia"]),
+            "codigo": (p["codigo_barras"] or p["sku"]),
         }
         for p in conn.execute(
-            "SELECT sku, nombre, precio_centavos, existencia FROM productos ORDER BY nombre"
+            "SELECT sku, nombre, precio_centavos, existencia, codigo_barras FROM productos ORDER BY nombre"
         )
     ]
     grupos: dict[str, list] = {}
@@ -392,21 +413,41 @@ def _modulos_negocio(conn) -> dict:
     }
 
 
-def _almacen(conn) -> list[dict]:
+def _entradas(conn) -> list[dict]:
+    return [
+        {"folio": r["nota"], "piezas": int(r["n"])}
+        for r in conn.execute(
+            """SELECT nota, COUNT(*) AS n FROM facturas_compra
+               WHERE nota LIKE 'Folio %'
+               GROUP BY nota ORDER BY MAX(id) DESC LIMIT 6"""
+        )
+    ]
+
+
+def _almacen(conn, ver_costos: bool = True) -> list[dict]:
+    vendidas = {
+        int(r["producto_id"]): int(r["n"] or 0)
+        for r in conn.execute(
+            "SELECT producto_id, SUM(cantidad) AS n FROM venta_lineas GROUP BY producto_id"
+        )
+    }
     productos = filas(
         conn.execute(
-            "SELECT id, sku, nombre, existencia, minimo, seccion FROM productos ORDER BY nombre"
+            """SELECT id, sku, nombre, existencia, minimo, seccion, precio_centavos
+               FROM productos ORDER BY nombre"""
         ).fetchall()
     )
     salida = []
     for p in productos:
-        lotes = [
-            {"cantidad": int(r["cantidad"]), "costo": fmt_mxn(r["costo_centavos"])}
-            for r in conn.execute(
-                "SELECT cantidad, costo_centavos FROM lotes WHERE producto_id=? AND cantidad>0 ORDER BY id",
-                (p["id"],),
-            )
-        ]
+        lotes = []
+        for r in conn.execute(
+            "SELECT cantidad, costo_centavos FROM lotes WHERE producto_id=? AND cantidad>0 ORDER BY id",
+            (p["id"],),
+        ):
+            lote = {"cantidad": int(r["cantidad"])}
+            if ver_costos:
+                lote["costo"] = fmt_mxn(r["costo_centavos"])
+            lotes.append(lote)
         movimientos = [
             {"tipo": r["tipo"], "cantidad": int(r["cantidad"]), "nota": r["nota"] or ""}
             for r in conn.execute(
@@ -415,17 +456,20 @@ def _almacen(conn) -> list[dict]:
                 (p["id"],),
             )
         ]
-        salida.append(
-            {
-                "sku": p["sku"],
-                "nombre": p["nombre"],
-                "seccion": p["seccion"] or "Insumos",
-                "existencia": int(p["existencia"]),
-                "minimo": int(p["minimo"]),
-                "lotes": lotes,
-                "movimientos": movimientos,
-            }
-        )
+        ficha = {
+            "sku": p["sku"],
+            "nombre": p["nombre"],
+            "seccion": p["seccion"] or "Insumos",
+            "existencia": int(p["existencia"]),
+            "minimo": int(p["minimo"]),
+            "vendidas": vendidas.get(int(p["id"]), 0),
+            "lotes": lotes,
+            "movimientos": movimientos,
+        }
+        if ver_costos:
+            ficha["precio"] = fmt_mxn(p["precio_centavos"]) if int(p["precio_centavos"]) else ""
+            ficha["precio_centavos"] = int(p["precio_centavos"])
+        salida.append(ficha)
     return salida
 
 

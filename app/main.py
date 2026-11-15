@@ -73,6 +73,12 @@ class AjusteIn(BaseModel):
     delta: int
 
 
+class MermaIn(BaseModel):
+    telefono10: str
+    sku: str
+    motivo: str
+
+
 class AtenderIn(BaseModel):
     desde: str
     para: str
@@ -92,6 +98,13 @@ class LineaVenta(BaseModel):
 class VentaIn(BaseModel):
     telefono10: str
     lineas: list[LineaVenta]
+    cliente10: str = ""
+
+
+class PrecioIn(BaseModel):
+    telefono10: str
+    sku: str
+    precio_pesos: float
 
 
 class BancoIn(BaseModel):
@@ -276,12 +289,90 @@ async def venta_caja(body: VentaIn, k: str | None = Query(None)):
         raise HTTPException(400, str(exc)) from exc
     if telefono not in owner_phones():
         raise HTTPException(403, "Solo el negocio cobra en caja.")
+    cliente = ""
+    if (body.cliente10 or "").strip():
+        try:
+            cliente = a_telefono10(body.cliente10)
+        except ValueError as exc:
+            raise HTTPException(400, str(exc)) from exc
     from app.departamentos.almacen import vender_en_caja
 
     try:
-        return vender_en_caja([{"sku": linea.sku, "cantidad": linea.cantidad} for linea in body.lineas])
+        venta = vender_en_caja([{"sku": linea.sku, "cantidad": linea.cantidad} for linea in body.lineas])
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
+    venta["aviso"] = ""
+    if cliente:
+        from app.config import env
+        from app.personas import guardar_mensaje, obtener_o_crear
+        from app.whatsapp import enviar_a_telefono
+
+        contacto = obtener_o_crear(cliente)
+        guardar_mensaje(contacto["id"], "dueno", venta["ticket"])
+        if env("WHATSAPP_TOKEN") and env("WHATSAPP_PHONE_NUMBER_ID"):
+            await enviar_a_telefono(cliente, venta["ticket"])
+            venta["aviso"] = "Mandé el ticket por WhatsApp."
+        else:
+            venta["aviso"] = "El ticket quedó en su ficha. WhatsApp no tiene las llaves, así que no salió al teléfono."
+    return venta
+
+
+@app.post("/api/caja/cobro")
+async def caja_cobro(body: VentaIn, k: str | None = Query(None)):
+    """El QR del ticket. Crearlo no cobra: el banco avisa cuando el dinero entra."""
+    _llave(k)
+    try:
+        telefono = a_telefono10(body.telefono10)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if telefono not in owner_phones():
+        raise HTTPException(403, "Solo el negocio cobra en caja.")
+    from app.departamentos import cobranza
+    from app.departamentos.almacen import cotizar_caja
+    from app.db import conectar
+
+    contacto = obtener_o_crear(telefono)
+    ticket = 0
+    if body.lineas:
+        try:
+            ticket = cotizar_caja([{"sku": linea.sku, "cantidad": linea.cantidad} for linea in body.lineas])
+        except ValueError:
+            ticket = 0
+    with conectar() as conn:
+        ya = conn.execute(
+            """SELECT * FROM cobros
+               WHERE contacto_id=? AND metodo='qr' AND estado='pendiente'
+                 AND qr_string IS NOT NULL AND qr_string!=''
+               ORDER BY id DESC LIMIT 1""",
+            (contacto["id"],),
+        ).fetchone()
+    if ya:
+        return {
+            "cobro_id": ya["id"],
+            "monto": fmt_mxn(ya["monto_centavos"]),
+            "ticket": fmt_mxn(ticket or ya["monto_centavos"]),
+            "qr": f"/qr/{ya['id']}.png",
+            "quien": contacto.get("nombre") or "Miriam",
+        }
+    try:
+        cobro = await cobranza.crear_cobro(
+            "libre",
+            "qr",
+            ticket or MONTO_CENTAVO,
+            contacto["id"],
+            None,
+            "Cobro CoDi de la caja",
+            expiration=600,
+        )
+    except pey.PeyError as exc:
+        raise HTTPException(502, "No pude crear el código de pago.") from exc
+    return {
+        "cobro_id": cobro["id"],
+        "monto": fmt_mxn(cobro["monto_centavos"]),
+        "ticket": fmt_mxn(ticket or cobro["monto_centavos"]),
+        "qr": f"/qr/{cobro['id']}.png",
+        "quien": contacto.get("nombre") or "Miriam",
+    }
 
 
 @app.post("/api/orden/aprobar")
@@ -320,6 +411,60 @@ async def ajustar_almacen(body: AjusteIn, k: str | None = Query(None)):
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     return {"ok": True, "nota": nota}
+
+
+@app.post("/api/almacen/precio")
+async def precio_almacen(body: PrecioIn, k: str | None = Query(None)):
+    """Pone el precio de venta. El costo del lote no se mueve."""
+    _llave(k)
+    try:
+        telefono = a_telefono10(body.telefono10)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if telefono not in owner_phones():
+        raise HTTPException(403, "Solo el negocio pone el precio de venta.")
+    from app.departamentos.almacen import poner_precio
+
+    try:
+        nota = poner_precio(body.sku, body.precio_pesos)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"ok": True, "nota": nota}
+
+
+@app.post("/api/almacen/merma")
+async def merma_almacen(body: MermaIn, k: str | None = Query(None)):
+    """Caducó, se rompió o se perdió. Baja el lote de enfrente y no se anota como venta."""
+    _llave(k)
+    try:
+        telefono = a_telefono10(body.telefono10)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if telefono not in owner_phones():
+        raise HTTPException(403, "Solo el negocio anota la merma.")
+    from app.departamentos.almacen import registrar_merma
+
+    try:
+        nota = registrar_merma(body.sku, body.motivo)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    return {"ok": True, "nota": nota}
+
+
+@app.post("/api/almacen/correo")
+async def correo_almacen(body: CentavoIn, k: str | None = Query(None)):
+    """Busca facturas XML nuevas en el correo del negocio y las mete al almacén."""
+    _llave(k)
+    try:
+        telefono = a_telefono10(body.telefono10)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    if telefono not in owner_phones():
+        raise HTTPException(403, "Solo el negocio revisa el correo.")
+    from app.correo_facturas import traer
+
+    contacto = obtener_o_crear(telefono)
+    return {"ok": True, "nota": traer(contacto["id"])}
 
 
 @app.post("/api/favorito")
@@ -589,9 +734,13 @@ async def cargar_archivo(
         ".wav": "audio",
         ".webm": "audio",
         ".ogg": "audio",
+        ".jpg": "foto",
+        ".jpeg": "foto",
+        ".png": "foto",
+        ".webp": "foto",
     }
     if sufijo not in tipos:
-        raise HTTPException(400, "Usa PDF, XML de factura, Excel, CSV o un audio.")
+        raise HTTPException(400, "Usa el Excel de la tienda, la factura o una foto de la lista.")
     data = await archivo.read(8_000_000)
     if not data:
         raise HTTPException(400, "El archivo vino vacío.")
@@ -604,6 +753,11 @@ async def cargar_archivo(
         nota = cargas.aplicar_tabla(cargas.leer_xlsx(data))
     elif sufijo == ".xml":
         nota = cargas.leer_cfdi(data)
+    elif sufijo == ".pdf":
+        nota = await cargas.leer_documento(data)
+    elif sufijo in {".jpg", ".jpeg", ".png", ".webp"}:
+        mime = "image/png" if sufijo == ".png" else "image/webp" if sufijo == ".webp" else "image/jpeg"
+        nota = await cargas.leer_imagen(data, mime)
     else:
         nota = cargas.texto_sin_lista()
     cargas.guardar_nota(contacto["id"], tipos[sufijo], destino.name, nota)

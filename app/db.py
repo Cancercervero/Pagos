@@ -364,6 +364,11 @@ def init_db() -> None:
         columnas_producto = {r["name"] for r in conn.execute("PRAGMA table_info(productos)")}
         if "seccion" not in columnas_producto:
             conn.execute("ALTER TABLE productos ADD COLUMN seccion TEXT NOT NULL DEFAULT 'Insumos'")
+        if "codigo_barras" not in columnas_producto:
+            conn.execute("ALTER TABLE productos ADD COLUMN codigo_barras TEXT")
+        conn.execute(
+            "UPDATE productos SET codigo_barras=sku WHERE codigo_barras IS NULL OR codigo_barras=''"
+        )
         _llenar_consumos(conn)
         _llenar_lotes(conn)
         _insumos_proveedor(conn)

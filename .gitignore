@@ -26,3 +26,6 @@ android/.gradle/
 android/build/
 android/app/build/
 android/.idea/
+
+# Copia local de Michingón (referencia, no se sube aquí)
+/michingon3/

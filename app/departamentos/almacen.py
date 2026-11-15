@@ -283,6 +283,8 @@ def vender_en_caja(lineas: list[dict]) -> dict:
             if int(producto["existencia"]) < cantidad:
                 raise ValueError(f"No hay suficiente {producto['nombre']}.")
             precio = int(producto["precio_centavos"])
+            if precio < 1:
+                raise ValueError(f"{producto['nombre']} no tiene precio de venta.")
             total += precio * cantidad
             armadas.append((producto, cantidad, precio))
         cur = conn.execute(
@@ -297,7 +299,91 @@ def vender_en_caja(lineas: list[dict]) -> dict:
                 (venta_id, producto["id"], cantidad, precio),
             )
             _consumir_lotes(conn, int(producto["id"]), cantidad, None, f"caja {venta_id}")
-    return {"ok": True, "total": fmt_mxn(total)}
+        lineas_ticket = [
+            f"{producto['nombre']} × {cantidad} · {fmt_mxn(precio)}"
+            for producto, cantidad, precio in armadas
+        ]
+        ticket = "Ticket de caja\n" + "\n".join(lineas_ticket) + f"\nTotal {fmt_mxn(total)}\nEfectivo."
+    return {"ok": True, "total": fmt_mxn(total), "ticket": ticket}
+
+
+def cotizar_caja(lineas: list[dict]) -> int:
+    """El total del ticket, con el precio del anaquel. No descuenta piezas ni cobra."""
+    if not lineas:
+        raise ValueError("El ticket está vacío.")
+    with conectar() as conn:
+        total = 0
+        for linea in lineas:
+            sku = str(linea.get("sku") or "").strip().lower()
+            cantidad = int(linea.get("cantidad") or 0)
+            if cantidad < 1:
+                raise ValueError("La cantidad tiene que ser al menos 1.")
+            producto = conn.execute("SELECT * FROM productos WHERE sku=?", (sku,)).fetchone()
+            if not producto:
+                raise ValueError("No está ese producto.")
+            if int(producto["existencia"]) < cantidad:
+                raise ValueError(f"No hay suficiente {producto['nombre']}.")
+            precio = int(producto["precio_centavos"])
+            if precio < 1:
+                raise ValueError(f"{producto['nombre']} no tiene precio de venta.")
+            total += precio * cantidad
+    if total < 1:
+        raise ValueError("El ticket no tiene precio de venta.")
+    return total
+
+
+def poner_precio(sku: str, precio_pesos: float) -> str:
+    """El precio de venta. No toca el costo del lote."""
+    centavos = pesos_a_centavos(precio_pesos)
+    if centavos < 1:
+        raise ValueError("El precio de venta tiene que ser mayor a cero.")
+    sku = sku.strip().lower()
+    with transaccion() as conn:
+        producto = conn.execute("SELECT * FROM productos WHERE sku=?", (sku,)).fetchone()
+        if not producto:
+            raise ValueError("Ese material no está en el almacén.")
+        conn.execute("UPDATE productos SET precio_centavos=? WHERE id=?", (centavos, producto["id"]))
+    return f"{producto['nombre']} se vende a {fmt_mxn(centavos)}."
+
+
+MOTIVOS_MERMA = {
+    "caducidad": "Caducó. Sale del lote de enfrente. No es venta.",
+    "dano": "Se rompió. Sale del lote de enfrente. No es venta.",
+    "perdida": "Se perdió. Sale del lote de enfrente. No es venta.",
+}
+
+
+def registrar_merma(sku: str, motivo: str) -> str:
+    """Una pieza que no se vendió. Sale del lote más viejo, que es el que está al frente."""
+    nota = MOTIVOS_MERMA.get((motivo or "").strip().lower())
+    if not nota:
+        raise ValueError("La merma es caducidad, daño o pérdida.")
+    sku = sku.strip().lower()
+    with transaccion() as conn:
+        producto = conn.execute("SELECT * FROM productos WHERE sku=?", (sku,)).fetchone()
+        if not producto:
+            raise ValueError("Ese material no está en el almacén.")
+        if int(producto["existencia"]) < 1:
+            raise ValueError("Ya está en cero.")
+        lote = conn.execute(
+            "SELECT * FROM lotes WHERE producto_id=? AND cantidad>0 ORDER BY id LIMIT 1",
+            (producto["id"],),
+        ).fetchone()
+        costo = int(lote["costo_centavos"]) if lote else None
+        if lote:
+            conn.execute("UPDATE lotes SET cantidad=cantidad-1 WHERE id=?", (lote["id"],))
+        conn.execute("UPDATE productos SET existencia=existencia-1 WHERE id=?", (producto["id"],))
+        conn.execute(
+            """INSERT INTO movimientos_almacen
+               (producto_id, tipo, cantidad, costo_centavos, nota, creado_en)
+               VALUES (?, 'merma', 1, ?, ?, ?)""",
+            (producto["id"], costo, nota, ahora_iso()),
+        )
+        proponer_orden(conn)
+        queda = conn.execute(
+            "SELECT existencia FROM productos WHERE id=?", (producto["id"],)
+        ).fetchone()["existencia"]
+    return f"Anoté la merma. Quedan {queda}. No es venta."
 
 
 def ajustar(sku: str, delta: int) -> str:
@@ -361,7 +447,11 @@ def _asegurar(conn, sku: str, nombre: str, costo: int) -> dict:
     row = conn.execute("SELECT * FROM productos WHERE sku=?", (sku,)).fetchone()
     if row:
         return dict(row)
-    seccion = {"tinte": "Tintes", "papel-bano": "Limpieza", "papel-aluminio": "Varios"}.get(sku, "Varios")
+    from app.departamentos.cargas import grupo_de
+
+    seccion = grupo_de(nombre)
+    if seccion == "Varios":
+        seccion = {"tinte": "Tintes", "papel-bano": "Limpieza", "papel-aluminio": "Varios"}.get(sku, "Varios")
     conn.execute(
         """INSERT INTO productos (sku, nombre, costo_centavos, existencia, minimo, seccion)
            VALUES (?, ?, ?, 0, 2, ?)""",

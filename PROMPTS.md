@@ -9,7 +9,7 @@
 
 ```
 Lee completos @MICHINGON.md, @INSTRUCCIONES.md y @.cursor/rules/agente-bancario.mdc.
-MICHINGON.md manda sobre el stack: la implementación va DENTRO de michingon3/ (Next.js 14 + Firebase + Genkit, TypeScript). INSTRUCCIONES.md manda sobre QUÉ hacer (reglas del reto, demo, contratos de pey §6, idempotencia, casos borde §10, SAT §13, lógica de Donna §13B).
+MICHINGON.md manda sobre el stack: la implementación va DENTRO de michingon3/ (Next.js 14 + Firebase, TypeScript). De Michingón SOLO se toma la ARQUITECTURA (módulos, Firestore, pantallas, roles, despliegue). Su IA NO se usa: no toques src/ai/ (Genkit/Gemini), brain, ai-assistant-widget ni mao-assistant. El agente se construye nuevo en src/lib/agente/ con el cliente openai y LLM_BASE_URL/LLM_API_KEY/LLM_MODEL. INSTRUCCIONES.md manda sobre QUÉ hacer (reglas del reto, demo, contratos de pey §6, idempotencia, casos borde §10, SAT §13, lógica de Donna §13B).
 Para la API de pey consulta @docs/pey_openapi.json; no inventes campos. El código de @referencia_cerberus/ (Python) se porta como lógica a TypeScript, no se importa.
 Trabajamos por fases M1–M6. Al terminar cada una: npm run build sin errores, dime qué archivos cambiaste y qué falta. No avances sin que te lo pida.
 Confirma resumiendo en 5 líneas las escenas A y B de MICHINGON.md §6.
@@ -44,8 +44,8 @@ Listo cuando: un pago real en producción cambia el POS a PAGADO.
 ```
 Implementa M3 según @MICHINGON.md §2.3, §4 y §6 (escena B) y @INSTRUCCIONES.md §8–§9:
 1. src/lib/whatsapp.ts: enviarTexto/Imagen/Documento con Graph API (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID), normalizar 521/52 → 10 dígitos, reintento con 52+10.
-2. api/webhooks/whatsapp/route.ts: VERIFY_TOKEN desde env, ignorar statuses, dedupe por message.id (Firestore), responder 200 rápido.
-3. whatsapp-flow.ts → agente con tools (Genkit defineTool o cliente OpenAI-compatible si gemini15Flash ya no responde): ver_productos (products con stock>0), crear_pedido (orders, status pending), cobrar_pedido (cobro push /codi/pn con phoneNumber=telefono10), estado_pedido, mi_saldo. Roles por OWNER_PHONES / STAFF_PHONES. Reglas duras: el LLM no marca pagos ni calcula montos.
+2. api/webhooks/whatsapp/route.ts: VERIFY_TOKEN desde env, ignorar statuses, dedupe por message.id (Firestore), responder 200 rápido, y llamar a src/lib/agente (deja de importar src/ai/flows/whatsapp-flow.ts; NO modifiques nada en src/ai/).
+3. Agente NUEVO en src/lib/agente/ (llm.ts, herramientas.ts, prompts.ts) con el paquete openai (npm i openai) y LLM_BASE_URL/LLM_API_KEY/LLM_MODEL. Nada de Genkit. Tools: ver_productos (products con stock>0), crear_pedido (orders, status pending), cobrar_pedido (cobro push /codi/pn con phoneNumber=telefono10), estado_pedido, mi_saldo. Roles por OWNER_PHONES / STAFF_PHONES. Reglas duras: el LLM no marca pagos ni calcula montos.
 4. Efecto pedido pagado (MICHINGON.md §4): order → preparing, venta, stock y mensajes a ambos.
 5. Historial en conversaciones/{telefono10}/mensajes. Aviso de privacidad la primera vez.
 Listo cuando: la escena B pasos 1–3 funciona por WhatsApp con dinero real.

@@ -1,7 +1,9 @@
 # Michingón + pey: la base real del proyecto
 
-> **Versión `v3-michingon`. Este documento manda sobre la parte de stack de `INSTRUCCIONES.md`.**
-> La implementación se hace **dentro de `michingon3/`** (Next.js 14 + Firebase + Genkit), no en un servicio Python nuevo.
+> **Versión `v3.1-arquitectura`. Este documento manda sobre la parte de stack de `INSTRUCCIONES.md`.**
+> La implementación se hace **dentro de `michingon3/`** (Next.js 14 + Firebase), no en un servicio Python nuevo.
+>
+> **🚫 De Michingón SOLO se toma la ARQUITECTURA:** módulos, modelo de datos en Firestore, pantallas, roles y permisos, despliegue. **Su IA NO se usa:** ni `src/ai/` (Genkit/Gemini y sus 9 flujos), ni `brain`, ni `ai-assistant-widget`, ni `mao-assistant`, ni los escáneres con IA. No se porta, no se extiende, no se presenta en la demo ni en el pitch. **El agente se construye nuevo** en `src/lib/agente/`, con nuestro propio LLM (cliente compatible con OpenAI, configurable con `LLM_BASE_URL`, `LLM_API_KEY` y `LLM_MODEL`, por ejemplo Grok), según `INSTRUCCIONES.md` §9.
 > `INSTRUCCIONES.md` sigue siendo la fuente de verdad de **qué** hacer: reglas del reto, recorrido de la demo, contratos de pey, idempotencia, casos borde, SAT y lógica de Donna. Este documento dice **dónde y cómo** hacerlo en Michingón.
 
 ---
@@ -13,7 +15,7 @@ Plataforma de gestión para negocios pequeños, ya construida y **en vivo** en `
 **Stack:**
 - Next.js 14 (App Router) + TypeScript + Tailwind + Radix
 - Firebase: Auth, Firestore y Hosting, que reenvía todo a una función de Cloud Run `nextjsfunc`
-- IA: Genkit 0.5 con Gemini
+- La IA de Michingón (Genkit 0.5 con Gemini) **no se usa** en este proyecto
 
 **Familias de negocio** (`src/types/business-types.ts`): comercio, alimentos, servicios, producción y renteros. Cada familia activa distintos módulos. También define el régimen SAT (`RESICO | RIF | general | none`).
 
@@ -33,12 +35,12 @@ Plataforma de gestión para negocios pequeños, ya construida y **en vivo** en `
 | `tax-guide` | Guía SAT por régimen | Estimación de IVA/ISR |
 | `personal` | Modo personas | "También sirve para personas" (pitch) |
 | `staff`, `payroll` + `api/workforce/*` | Empleados, invitaciones, checador con geolocalización | Rol staff |
-| `brain` + `components/dashboard/ai-assistant-widget`, `mao-assistant` | Asistente de IA | Base del agente |
+| `brain` + `components/dashboard/ai-assistant-widget`, `mao-assistant` | Asistente de IA de Michingón | **🚫 No se usa** (solo arquitectura) |
 | `settings`, `settings/import` | Configuración e importación (Excel) | Onboarding |
 | `api/auth/webauthn` | **Biometría (WebAuthn)** | Era una decisión de diseño original: confirmar con huella o Face ID |
-| `api/webhooks/whatsapp` + `ai/flows/whatsapp-flow.ts` | Webhook de WhatsApp | **Hoy es un mock:** no envía nada y no crea pedidos. Se termina aquí |
+| `api/webhooks/whatsapp` | Webhook de WhatsApp | **Se reusa la ruta** (verificación y recepción). Deja de llamar a `ai/flows/whatsapp-flow.ts` y llama a **nuestro agente** `src/lib/agente/` |
 
-**Flujos de IA** (`src/ai/flows/`): `whatsapp-flow`, `process-order-text-flow` (texto → pedido), `order-scanner-flow`, `product-scanner-flow`, `invoice-parser-flow`, `inventory-count-flow`, `contact-scanner-flow`, `extract-data-flow` y `social-post-flow`.
+**IA de Michingón** (`src/ai/`, Genkit): **🚫 fuera del proyecto.** Los 9 flujos (`whatsapp-flow`, `process-order-text-flow`, escáneres, `social-post-flow`, etc.) se quedan como están: no se tocan, no se portan, no se muestran en la demo. Si una pantalla que se use en la demo depende de ellos y falla, se oculta ese botón; no se arregla la IA.
 
 **Datos** (`src/contexts/DataContext.tsx`). Escucha Firestore en tiempo real (`onSnapshot`) en:
 - `businesses/{businessId}/products`
@@ -50,8 +52,8 @@ Todo lo que el servidor escriba ahí **aparece solo en el panel**. Ese es el pan
 
 1. **`businessId` está fijo en `'demo'`** en `DataContext.tsx`. Para la demo usa `DEMO_BUSINESS_ID=demo` en el servidor, y así ambos lados ven lo mismo.
 2. **`addSale` descuenta stock solo en el estado local**, no en Firestore. Al recargar, el stock vuelve. Con pagos CoDi, el descuento se hace **en el servidor** (webhook) con transacción de Firestore. Arregla también `addSale` para que use `increment(-cantidad)`.
-3. **WhatsApp es mock:** `sendWhatsAppMessage` solo hace `console.log`, y el `VERIFY_TOKEN` está fijo en el código. Hay que pasarlo a variable de entorno.
-4. **Genkit 0.5 + `gemini15Flash`:** versión vieja. Si el modelo ya no responde, cambia a un modelo Gemini vigente o usa un cliente compatible con OpenAI (Grok o Gemini) con `LLM_BASE_URL`, `LLM_API_KEY` y `LLM_MODEL`, como dice la sección 9 de `INSTRUCCIONES.md`.
+3. **WhatsApp es mock:** `sendWhatsAppMessage` solo hace `console.log`, y el `VERIFY_TOKEN` está fijo en el código. Hay que pasarlo a variable de entorno. El envío real va en `src/lib/whatsapp.ts`.
+4. **La IA de Michingón no se usa.** Genkit 0.5 + `gemini15Flash` se quedan fuera. El agente nuevo usa un cliente compatible con OpenAI (paquete `openai`) con `LLM_BASE_URL`, `LLM_API_KEY` y `LLM_MODEL` (Grok: `https://api.x.ai/v1`), según `INSTRUCCIONES.md` §9.
 5. **Despliegue:** Firebase Hosting reenvía todo a la función `nextjsfunc`, que corre Next desde `functions/`. **`functions/src` es una copia de `src`** y está desfasada (38 archivos distintos). Antes de cada deploy se sincroniza (ver `.agent/workflows/deploy-functions.md` y `.github/workflows/ci.yml`).
 6. **Riesgo del cuerpo crudo en webhooks:** Cloud Functions puede parsear el body antes de que llegue a Next. La firma de pey se verifica sobre el **cuerpo crudo**. **Pruébalo primero** con un webhook real de pey en la URL de producción. Si llega vacío o alterado:
    - **Plan A:** exportar en `functions/index.js` una función dedicada `peyWebhook` (`onRequest`) que use `req.rawBody`.
@@ -98,8 +100,12 @@ src/lib/whatsapp.ts                     # enviarTexto / enviarImagen / enviarDoc
 src/app/api/pey/cobro/route.ts          # POST: crea cobro (POS, pedido, anticipo, libre). Protegido: solo usuario autenticado del negocio
 src/app/api/webhooks/pey/route.ts       # POST: raw body → verificar → procesar → 200
 src/app/api/pey/conciliar/route.ts      # POST/GET con secreto: expira cobros, recordatorios, reconcilia con GET /transaction/{id}
-src/app/api/webhooks/whatsapp/route.ts  # MODIFICAR: verify token de env, ignorar statuses, dedupe por message.id, responder 200 rápido
-src/ai/flows/whatsapp-flow.ts           # MODIFICAR: agente con tools (catálogo = products, pedido = orders, cobro = /api/pey/cobro)
+src/app/api/webhooks/whatsapp/route.ts  # MODIFICAR: verify token de env, ignorar statuses, dedupe por message.id, responder 200 rápido,
+                                        #   y llamar a src/lib/agente (YA NO a src/ai/flows/whatsapp-flow.ts)
+src/lib/agente/llm.ts                   # NUEVO: cliente openai con LLM_BASE_URL/LLM_API_KEY/LLM_MODEL, bucle de tool calling (máx. 5 vueltas, timeout)
+src/lib/agente/herramientas.ts          # NUEVO: tools (catálogo = products, pedido = orders, cobro = pey, stock, compras) con validación de rol
+src/lib/agente/prompts.ts               # NUEVO: system prompts cliente/dueño/staff con las reglas duras de INSTRUCCIONES §9
+src/ai/**                               # NO TOCAR (IA de Michingón, fuera del proyecto)
 src/components/pos/CodiCheckoutModal.tsx  # QR grande + estado en vivo (onSnapshot al doc del cobro) → "PAGADO ✓"
 src/app/(app)/business/[id]/pos/page.tsx  # MODIFICAR: botón "Cobrar con CoDi"
 src/components/dashboard/codi-live-widget.tsx  # feed de cobros/pagos en vivo en el dashboard
@@ -149,7 +155,7 @@ En la ruta: `export const runtime = "nodejs"`, luego `const raw = await req.text
 | Aldo (órdenes de compra) | `suppliers` + colección nueva `purchaseOrders` + envío por WhatsApp |
 | Valentina (archivo de clientas, inactivas) | `clients` (agregar `ultimaVisita`, `formula`) |
 | Isabel / Tomás / Verónica (predicción, márgenes, auditoría) | `profitability` y `reports`. Portar `dias_de_stock` y `analizar_margen` como funciones del servidor que use el agente |
-| Annie (tono, idioma) | Prompt del agente en `whatsapp-flow.ts` |
+| Annie (tono, idioma) | `src/lib/agente/prompts.ts` (agente nuevo, no la IA de Michingón) |
 | Onboarding / ingesta | `onboarding`, `create-business`, `settings/import` (ya existen) |
 | CFDI borrador (`cfdi_engine.py`) | Opcional: `invoicing`. Generar XML borrador o solo el PDF con la leyenda "timbrado simulado" |
 | Impuestos (INSTRUCCIONES §13) | `tax-guide` + `iva-breakdown-dialog` (ya existen); sumar los cobros CoDi |
@@ -172,7 +178,7 @@ Casos borde y respuestas para los jueces: `INSTRUCCIONES.md` §10.
 
 ## 7. Variables de entorno
 
-Ver `michingon3/.env.example`: Firebase (público y admin), Gemini, pey, WhatsApp, `DEMO_BUSINESS_ID`, `OWNER_PHONES`, `STAFF_PHONES`, `SUPPLIER_PHONE` y `PUBLIC_BASE_URL`.
+Ver `michingon3/.env.example`: Firebase (público y admin), **LLM del agente** (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`), pey, WhatsApp, `DEMO_BUSINESS_ID`, `OWNER_PHONES`, `STAFF_PHONES`, `SUPPLIER_PHONE` y `PUBLIC_BASE_URL`.
 
 **En producción (Firebase Functions):** las variables van en `functions/.env` (o `functions/.env.local`, que el workflow copia). Los secretos (`PEY_API_KEY`, `PEY_WEBHOOK_SECRET`, `WHATSAPP_TOKEN`) van con `firebase functions:secrets:set` si da tiempo, o en el `.env` que **no** se commitea.
 

@@ -5,8 +5,9 @@ alwaysApply: true
 
 # Reglas del proyecto
 
-- **Se construye dentro de `michingon3/`** (Next.js 14 + TypeScript + Firebase/Firestore + Genkit). `MICHINGON.md` manda sobre el stack y dice dónde va cada cosa. `INSTRUCCIONES.md` dice qué hacer. Para la API de pey, `docs/pey_openapi.json`. No inventes endpoints ni campos.
+- **Se construye dentro de `michingon3/`** (Next.js 14 + TypeScript + Firebase/Firestore; sin la IA Genkit de Michingón). `MICHINGON.md` manda sobre el stack y dice dónde va cada cosa. `INSTRUCCIONES.md` dice qué hacer. Para la API de pey, `docs/pey_openapi.json`. No inventes endpoints ni campos.
 - Fases en `PROMPTS.md`: **M0–M6** (Michingón). Las fases Python 1–6 son solo la ruta alternativa.
+- **De Michingón solo se toma la ARQUITECTURA.** Su IA (`src/ai/**`, Genkit/Gemini, `brain`, `ai-assistant-widget`, `mao-assistant`) **no se usa ni se modifica**. El agente es nuevo, en `src/lib/agente/`, con el paquete `openai` y `LLM_BASE_URL`/`LLM_API_KEY`/`LLM_MODEL`.
 - El servidor escribe en Firestore con `firebase-admin`. El panel se actualiza solo vía `onSnapshot` (`DataContext`). No construyas otro panel.
 - **Nunca** subas `serviceAccountKey.json` ni `.env*` (solo `.env.example`).
 - Los montos de cobros y pagos van en **centavos (int)**. Solo se convierten a pesos al llamar a pey o al mostrarlos.

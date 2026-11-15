@@ -1,6 +1,6 @@
 # Agente Bancario por WhatsApp
 
-> **⚠️ Versión `v2-negocio-completo`.** Se agregaron el almacén Donna, la tienda, las compras a proveedores, el archivo de clientes y la atención a clientes. **IA o persona que trabajó con la versión anterior: lee [`GROK_LEEME_PRIMERO.md`](GROK_LEEME_PRIMERO.md).**
+> **⚠️ Versión `v3-michingon`.** La base del proyecto es **[`michingon3/`](michingon3/)**, nuestra plataforma de negocio en vivo (Next.js + Firebase): POS, inventario, recetas, clientes, proveedores, pedidos, facturas, guía SAT, staff y modo personas. Los pagos CoDi (pey) y el agente de WhatsApp se integran ahí. Guía: **[`MICHINGON.md`](MICHINGON.md)**. **IA o persona que trabajó con una versión anterior: lee [`GROK_LEEME_PRIMERO.md`](GROK_LEEME_PRIMERO.md).**
 
 Un agente que vive en el WhatsApp de tu negocio: cotiza, agenda, cobra por **CoDi** (vía la API de [pey](https://docs.pey.mx)), confirma pagos en el servidor, concilia, genera facturas en borrador, lleva el **inventario** (recetas por servicio, stock bajo, órdenes de compra a proveedores), el **archivo de clientes** y la **tienda**, y te dice cómo van tus cuentas y tus márgenes.
 

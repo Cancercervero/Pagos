@@ -1,5 +1,92 @@
 # Prompts listos para pegar
 
+> **`v3-michingon`: la ruta principal es construir dentro de `michingon3/`** (fases M0–M6, justo abajo).
+> Las fases 1–6 en Python que vienen después quedan como **ruta alternativa**. Úsalas solo si Michingón no compila ni despliega a tiempo.
+
+---
+
+## M0: contexto (pégalo primero en cada chat nuevo de Cursor)
+
+```
+Lee completos @MICHINGON.md, @INSTRUCCIONES.md y @.cursor/rules/agente-bancario.mdc.
+MICHINGON.md manda sobre el stack: la implementación va DENTRO de michingon3/ (Next.js 14 + Firebase + Genkit, TypeScript). INSTRUCCIONES.md manda sobre QUÉ hacer (reglas del reto, demo, contratos de pey §6, idempotencia, casos borde §10, SAT §13, lógica de Donna §13B).
+Para la API de pey consulta @docs/pey_openapi.json; no inventes campos. El código de @referencia_cerberus/ (Python) se porta como lógica a TypeScript, no se importa.
+Trabajamos por fases M1–M6. Al terminar cada una: npm run build sin errores, dime qué archivos cambiaste y qué falta. No avances sin que te lo pida.
+Confirma resumiendo en 5 líneas las escenas A y B de MICHINGON.md §6.
+```
+
+## M1: pey + webhook + POS "Cobrar con CoDi" (hito mínimo). Aprox. 2.5 h
+
+```
+Implementa M1 según @MICHINGON.md §2–§4 y @INSTRUCCIONES.md §6–§7:
+1. cd michingon3 && npm install. Crea .env.local desde .env.example (te paso los valores aparte). Verifica que npm run dev levanta.
+2. src/lib/server/firebase-admin.ts, src/lib/pey.ts (crearQr, crearPush, crearLink, obtenerTransaccion; errores {error:{message,type,requestId}}; reintento en 503), src/lib/pey-webhook.ts con verificarFirmaPey (código de MICHINGON.md §4) y procesarEventoPey: transacción Firestore con tx.create en webhookEventos/{webhook-id} y businesses/{bid}/pagos/{transactionId}; confirmar con GET /transaction/{id} status PAID; efectos de la tabla de MICHINGON.md §4 SOLO si ambos create fueron nuevos.
+3. src/app/api/pey/cobro/route.ts y src/app/api/webhooks/pey/route.ts (runtime nodejs, raw body con req.text()).
+4. Tipos nuevos en src/types/business.ts (Cobro, Pago, PurchaseOrder; Sale.paymentMethod += 'codi').
+5. POS: botón "Cobrar con CoDi" → CodiCheckoutModal con QR grande (librería qrcode desde qrString) y estado en vivo vía onSnapshot del doc del cobro → "PAGADO ✓". Al pagar: venta creada en el servidor, stock descontado con FieldValue.increment.
+6. Arregla addSale en DataContext para que el stock se descuente en Firestore (MICHINGON.md §2.2).
+7. firestore.rules: cobros/pagos de solo lectura para el cliente web.
+Listo cuando: en local con túnel (cloudflared/ngrok) y el webhook registrado en portal.mipey.mx, pago un QR de $1 desde mi banco y el modal cambia solo a PAGADO, la venta aparece y el stock baja. Y un webhook repetido no duplica nada.
+```
+
+## M2: despliegue temprano + prueba del webhook en producción. Aprox. 1 h
+
+```
+Despliega lo de M1 ANTES de seguir (MICHINGON.md §2.5, §2.6 y §8):
+1. Sincroniza src → functions/src (como .agent/workflows/deploy-functions.md y .github/workflows/ci.yml), variables en functions/.env (no se commitea) y firebase deploy.
+2. Registra https://michingon3-a77f8.web.app/api/webhooks/pey en pey y paga $1. Revisa los Webhook Logs del portal y los logs de la función.
+3. Si el cuerpo llega vacío o la firma no valida en Firebase: Plan A, una función dedicada peyWebhook en functions/index.js con req.rawBody; o Plan B, desplegar en Vercel con las mismas variables. Elige el que funcione primero.
+Listo cuando: un pago real en producción cambia el POS a PAGADO.
+```
+
+## M3: WhatsApp real + agente de pedidos con cobro. Aprox. 2.5 h
+
+```
+Implementa M3 según @MICHINGON.md §2.3, §4 y §6 (escena B) y @INSTRUCCIONES.md §8–§9:
+1. src/lib/whatsapp.ts: enviarTexto/Imagen/Documento con Graph API (WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID), normalizar 521/52 → 10 dígitos, reintento con 52+10.
+2. api/webhooks/whatsapp/route.ts: VERIFY_TOKEN desde env, ignorar statuses, dedupe por message.id (Firestore), responder 200 rápido.
+3. whatsapp-flow.ts → agente con tools (Genkit defineTool o cliente OpenAI-compatible si gemini15Flash ya no responde): ver_productos (products con stock>0), crear_pedido (orders, status pending), cobrar_pedido (cobro push /codi/pn con phoneNumber=telefono10), estado_pedido, mi_saldo. Roles por OWNER_PHONES / STAFF_PHONES. Reglas duras: el LLM no marca pagos ni calcula montos.
+4. Efecto pedido pagado (MICHINGON.md §4): order → preparing, venta, stock y mensajes a ambos.
+5. Historial en conversaciones/{telefono10}/mensajes. Aviso de privacidad la primera vez.
+Listo cuando: la escena B pasos 1–3 funciona por WhatsApp con dinero real.
+```
+
+## M4: cobranza, casos borde, citas con anticipo. Aprox. 1.5 h
+
+```
+Implementa M4 según @INSTRUCCIONES.md §7, §10 y §11 adaptado a Firestore:
+1. api/pey/conciliar: expira cobros vencidos (confirmando con GET /transaction/{id}), un recordatorio a la mitad, reconcilia pagos con webhook perdido por la MISMA función idempotente. Protegido con un secreto; lo llama un cron externo (cron-job.org) cada minuto o el dashboard mientras está abierto.
+2. Pago tardío, excedente, pago sin conciliar, devolución manual (movimiento en expenses con categoría "devolución").
+3. Citas con anticipo: tool agendar_con_anticipo (order con deliveryDate y hora = cita; cobro tipo anticipo; al pagar se confirma). Tool del dueño cobrar_saldo.
+Listo cuando: cada fila de la tabla §10 tiene su comportamiento y la cita con anticipo se confirma sola al pagar.
+```
+
+## M5: inventario inteligente (Donna) + proveedor. Aprox. 2 h
+
+```
+Implementa M5 según @MICHINGON.md §4–§5 y @INSTRUCCIONES.md §13B, portando la lógica de @referencia_cerberus/salon_almacen/ a TypeScript:
+1. src/lib/server/inventario.ts (alertas de stock bajo, días de stock: enzo + isabel), src/lib/server/recetas.ts (aplicar receta = descontar ingredientes; recetas ya existen en Michingón), src/lib/server/compras.ts (purchaseOrders: generar, aprobar, rechazar, recibir: aldo).
+2. Tras cualquier pago que descuente stock: si un producto queda bajo minStock, se crea purchaseOrder pendiente y se manda WhatsApp al dueño: "¿Mando el pedido a {proveedor}?". El dueño responde "sí" → se envía al proveedor (SUPPLIER_PHONE o supplier.phone).
+3. Tools de dueño en el agente: estado_almacen, ordenes_compra, aprobar_orden, margen_producto, resumen_del_dia (ventas CoDi + gastos + estimación de IVA de tax-guide).
+4. Rol staff: registrar_uso y servicio_atendido (aplica receta), sin ver costos.
+Listo cuando: la escena B paso 4 funciona (stock bajo → "sí" → orden al proveedor) y el dashboard muestra la orden.
+```
+
+## M6: pulido de demo y entrega. Aprox. 1.5 h
+
+```
+M6:
+1. Widget "Cobros CoDi en vivo" en el dashboard (feed de cobros/pagos con onSnapshot). Etiquetas "simulado" donde aplique (timbrado CFDI, estimación SAT).
+2. Seed de demo (scripts/seed-demo-complete.ts) con productos con minStock realista y un proveedor con teléfono.
+3. Deploy final; revisa que no haya secretos en el repo (serviceAccountKey.json, .env, tokens).
+4. README de la raíz del repo: qué es, escenas A y B, qué es real y qué es simulado, casos borde, cómo correrlo.
+Listo cuando: las escenas A y B corren completas en la URL pública.
+```
+
+---
+
+# Ruta alternativa (Python): solo si Michingón no despliega a tiempo
+
 Instrucciones para el equipo:
 - **Cursor** escribe el código. Pégale **una fase a la vez** y no pases a la siguiente hasta que se cumpla el "Listo cuando".
 - **Grok** se usa para el pitch, el README, el guion del video, revisar la lógica de impuestos y como segundo par de ojos en el código. Si dentro de Cursor eliges el modelo Grok, los prompts de Cursor sirven igual.

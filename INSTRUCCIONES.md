@@ -1,6 +1,7 @@
 # Agente Bancario por WhatsApp: instrucciones maestras
 
-> **Versión `v2-negocio-completo`.** Si leíste una versión anterior, primero lee `GROK_LEEME_PRIMERO.md`: ahí está todo lo que se agregó (almacén Donna, tienda, compras, clientes, atención, rol staff).
+> **Versión `v3-michingon`.** Si leíste una versión anterior, primero lee `GROK_LEEME_PRIMERO.md`.
+> **La implementación va dentro de `michingon3/`** (Next.js 14 + Firebase), nuestra plataforma de negocio que ya está en vivo. **Lee `MICHINGON.md`**: manda sobre el stack. Donde este documento dice Python/FastAPI/SQLite, aplica la traducción de `MICHINGON.md`. Las reglas, la demo, los contratos de pey, la idempotencia, los casos borde, el SAT y la lógica de Donna de este documento siguen vigentes.
 
 > Documento fuente de verdad para quien programe este proyecto (Cursor, Grok o una persona).
 > Léelo completo antes de escribir código. Si algo aquí choca con tu intuición, gana este documento.

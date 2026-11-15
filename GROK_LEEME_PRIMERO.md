@@ -1,68 +1,94 @@
 # ⚠️ GROK: LEE ESTO PRIMERO. Esto es lo que te perdiste
 
-> **Marca de versión: `v2-negocio-completo`** (tag de git, commit `bf7a80c`).
-> Si tu contexto de este proyecto es anterior a esta marca, **está incompleto**. Descártalo y vuelve a leer `INSTRUCCIONES.md`.
+> **Marca de versión vigente: `v3-michingon`** (tag de git).
+> Si tu contexto de este proyecto es anterior a esta marca, **está incompleto y en parte equivocado**. Descártalo.
+> Orden de lectura: este archivo → `MICHINGON.md` → `INSTRUCCIONES.md` → `PROMPTS.md`.
 
-## Qué pasó
+## Historial de versiones
 
-La primera versión del repo (`4d0fd4c`, "Paquete inicial") solo traía la parte de **pagos**: WhatsApp, cotizaciones, citas, cobranza por CoDi con pey y facturas CFDI en borrador.
-
-**Faltaba la mitad del negocio** que ya teníamos construida en Cerberus: tiendas, gestión de inventario, compras a proveedores, archivo de clientes y atención a clientes. **Ya está agregada.** Si diseñaste, escribiste o propusiste algo sin esto, **revísalo contra lo de abajo**.
-
-## Lo que te perdiste (y dónde está ahora)
-
-### 1. Donna: almacén inteligente del salón por WhatsApp (producto completo)
-`referencia_cerberus/salon_almacen/`. **Ya funciona; se porta, no se reescribe.**
-
-| Agente | Archivo | Qué hace |
+| Marca | Qué traía | Qué faltaba |
 |---|---|---|
-| Donna | `agents/donna.py` | Orquestadora: despacha a los demás, reporte matutino, salud financiera |
-| Enzo | `agents/enzo.py` | Almacenista: uso, entradas, mermas, estado del almacén, alertas de stock bajo |
-| Angélica + recetas | `agents/angelica.py`, `agents/recetas.py` | Recetas por servicio ("hice un tinte" descuenta todo) y costo real por servicio. Lee fórmulas en foto |
-| Aldo | `agents/aldo.py` | Órdenes de compra a proveedores: aprobar/rechazar, envío por WhatsApp, recepción |
-| Valentina | `agents/valentina.py` | Archivo de clientas: visitas, fórmula personal, clientas inactivas (6+ semanas) |
-| Isabel | `agents/isabel.py` | Predicción: días de stock, fechas de agotamiento, tendencias |
-| Tomás | `agents/tomas.py` | Márgenes por producto y servicio, precio sugerido, alza de precios de proveedor |
-| Verónica | `agents/veronica.py` | Auditoría de uso y anomalías |
-| Expediente | `agents/expediente.py` | Perfil y consumo por estilista |
-| (soporte) | `skill.py`, `bot.py`, `onboarding.py`, `ingest.py`, `security.py`, `cron.py`, `seed.py`, `whatsapp_sender.py`, `salon_manager.py` | Fotos con visión, bot, alta del negocio por chat, inventario inicial desde Excel/foto/texto, whitelist y permisos, reportes programados, ~20 insumos de ejemplo, envío por Meta y multi-salón |
-| **Pitch** | `DONNA_PROPUESTA_COMERCIAL.md` | **Problema, ROI calculado y precios. Úsalo para el pitch** |
+| `4d0fd4c` (inicial) | Solo **pagos**: WhatsApp, cotizaciones, citas, cobranza CoDi con pey, CFDI en borrador. Stack Python nuevo | Todo el negocio |
+| `v2-negocio-completo` | Se agregó **Donna** (almacén del salón) y los módulos de negocio de Cerberus | **Michingón**, que es la plataforma real del negocio |
+| **`v3-michingon`** (vigente) | Se agregó **`michingon3/`**, nuestra plataforma de negocio completa y en vivo. **Ahora es la base del proyecto** | (nada conocido) |
 
-### 2. Módulos de negocio de Cerberus
-`referencia_cerberus/negocio/`:
-- **Inventario:** `empire_ledger.py` (lotes PEPS/FIFO), `almacen_db.py`, `almacen_skill.py`, `almacenista_skill.py`, `tania_bodeguera_skill.py`
-- **Ventas y CRM:** `ventas_skill.py`, `deal_tracker.py`, `business_followup.py`
-- **Atención a clientes:** `annie_empathy.py` (tono y guiones), `contact_gate.py` (filtro de contactos), `lingua_detector.py` (idioma), `annie_reporter.py` (bitácora)
-- **Onboarding del negocio:** `onboarding_engine.py`, `config_cliente_template.json`
-- **Alertas:** `alerta_imperativa.py`
-- **Manufactura y recetas con costo:** `manufactura_db.py`, `manufactura_skill.py`
-- **Caja, presupuesto y pronóstico:** `cajero_ledger.py`, `budget_sentinel.py`, `prophet_forecasting.py`
-- **Acceso:** `auth_gate.py`
+## 1. Lo más importante: Michingón es la base (v3)
 
-### 3. Cambios en la especificación (`INSTRUCCIONES.md`)
-- **Sección 2:** 8 departamentos nuevos (almacén, recetas, compras, **tienda**, archivo de clientes, márgenes, atención, onboarding) y un **rol nuevo: staff** (`STAFF_PHONES`), que reporta uso de insumos y **nunca ve costos ni finanzas**.
-- **Sección 3:** la demo crece con los pasos 9 a 11. Cadena: **pago → servicio atendido → descuento de insumos por receta → stock bajo → orden de compra → el dueño dice "sí" → le llega al proveedor**. Más la tienda: pedido de producto → cobro CoDi → salida de stock.
-- **Sección 4:** carpeta nueva `app/negocio/`.
-- **Sección 9:** tools nuevas de dueño (`estado_almacen`, `registrar_entrada`, `ordenes_compra`, `aprobar_orden`, `margen_servicio`, `prediccion_stock`, `clientas_inactivas`, `ficha_cliente`, `crear_receta`), de staff (`registrar_uso`, `servicio_atendido`, `consultar_stock`) y de tienda (`ver_productos`, `comprar_producto`).
-- **Sección 10:** casos borde nuevos (stock agotado entre pedido y pago, servicio atendido dos veces, insumo sin stock).
-- **Sección 13B (nueva):** cómo portar Donna y engancharla a los pagos de pey.
-- **Sección 15:** tabla de qué archivo de referencia va a qué módulo nuevo.
-- **`PROMPTS.md`:** nueva **FASE 5B**, y el prompt de pitch ahora incluye la propuesta comercial.
-- **`.env.example`:** `STAFF_PHONES` y `SUPPLIER_PHONE`.
+`michingon3/` es nuestra plataforma de gestión para negocios pequeños. **Ya existe y está en vivo** en `https://michingon3-a77f8.web.app`.
 
-## Qué tienes que hacer ahora
+**Stack:** Next.js 14 + TypeScript + Firebase (Auth, Firestore, Hosting/Cloud Run) + Genkit/Gemini.
 
-1. Vuelve a leer **`INSTRUCCIONES.md` completo**, sobre todo las secciones 2, 3, 9, 13B y 15.
-2. Si ya hiciste pitch, README o guion de video, **rehazlos** con la cadena completa (pagos + inventario + compras + clientes) y con el ROI de `DONNA_PROPUESTA_COMERCIAL.md`.
-3. Si revisaste o escribiste código, verifica que no dupliques lo que ya existe en `referencia_cerberus/`. **Se porta, no se reescribe.**
-4. Confirma que entendiste respondiendo en 5 líneas: qué agrega Donna, cuál es la cadena de la demo y qué no puede ver el rol staff.
+**Ya tiene:**
+- **Ventas:** POS, ventas, pedidos.
+- **Inventario:** lotes, mínimos y conciliación.
+- **Recetas con costeo**, incluido el escaneo por foto.
+- **Contactos:** clientes y proveedores.
+- **Dinero:** gastos, flujo de caja, rentabilidad, reportes, facturas y **guía SAT por régimen** (RESICO/RIF/general).
+- **Modo personas.**
+- **Equipo:** staff con invitaciones, checador con geolocalización y nómina.
+- **Biometría WebAuthn.**
+- **Importación desde Excel** y onboarding por familia de negocio (comercio, alimentos, servicios, producción, renteros).
+- **9 flujos de IA:** pedidos por texto, escáneres de producto, factura, contacto, conteo de inventario y posts para redes.
+
+**Decisión v3:** la integración de pagos (pey/CoDi) y el agente de WhatsApp se construyen **dentro de Michingón, en TypeScript**. Ya no es un servicio Python nuevo. La ruta Python queda solo como plan de emergencia.
+
+**Lee `MICHINGON.md`**, que tiene:
+- §1, módulos y rutas que ya existen.
+- §2, **problemas conocidos**:
+  - `businessId` fijo en `'demo'`
+  - `addSale` no persiste el stock
+  - WhatsApp es mock
+  - Genkit/Gemini 1.5 viejo
+  - `functions/src` desfasado
+  - riesgo del **cuerpo crudo del webhook** en Firebase
+  - llave de servicio
+- §3, modelo de Firestore para cobros y pagos con idempotencia (`tx.create`).
+- §4, archivos exactos a crear o modificar y la verificación de firma en TypeScript (probada).
+- §5, cómo Donna y Cerberus se mapean a módulos de Michingón.
+- §6, **la demo nueva** en 2 escenas:
+  - **A (mostrador):** POS "Cobrar con CoDi" → QR → pago → el modal cambia solo a "PAGADO" → venta y stock en vivo.
+  - **B (WhatsApp):** pedido → cobro push CoDi → pago → pedido en preparación → stock bajo → "¿mando el pedido al proveedor?" → "sí".
+
+## 2. Lo que se agregó en v2 (sigue vigente como lógica a portar)
+
+`referencia_cerberus/salon_almacen/` es **Donna**, el almacén inteligente del salón:
+- **Enzo:** inventario y stock bajo.
+- **Angélica + recetas:** costeo y descuento de insumos por servicio.
+- **Aldo:** órdenes de compra al proveedor.
+- **Valentina:** archivo de clientas.
+- **Isabel, Tomás y Verónica:** predicción, márgenes y auditoría.
+- **Además:** expediente de estilistas, onboarding, ingesta y seguridad.
+- **`DONNA_PROPUESTA_COMERCIAL.md`:** problema, ROI y precios. **Úsalo para el pitch.**
+
+`referencia_cerberus/negocio/` son 20 módulos de negocio de Cerberus: inventario, ventas/CRM, atención a clientes (Annie), onboarding, alertas, manufactura, caja y pronóstico.
+
+En v3 **esta lógica se porta a TypeScript dentro de Michingón** (`MICHINGON.md` §5 y fase M5). No se reescribe desde cero ni se importa el Python.
+
+## 3. Qué tienes que hacer ahora
+
+1. Lee `MICHINGON.md` completo, luego `INSTRUCCIONES.md` (reglas §1, contratos de pey §6, efectos §7, casos borde §10, SAT §13, Donna §13B).
+2. **Descarta** cualquier plan, código, pitch o README que asuma un servicio Python nuevo o que ignore Michingón.
+3. Las fases a seguir son **M0–M6** en `PROMPTS.md`.
+4. Rehaz el **pitch, el README y el guion del video** con:
+   - **Michingón:** la plataforma completa que ya existe y está en vivo.
+   - **pey/CoDi:** el pago confirmado dispara trabajo real (venta, stock, pedido, compra al proveedor).
+   - **WhatsApp:** el negocio opera desde el chat.
+   - El ROI de `DONNA_PROPUESTA_COMERCIAL.md`.
+5. Confirma que entendiste en 6 líneas:
+   - qué es Michingón y qué módulos ya tiene;
+   - por qué la implementación va en TypeScript dentro de Michingón;
+   - la escena A;
+   - la escena B;
+   - los 3 problemas conocidos más peligrosos para la demo;
+   - qué no puede ver el rol staff.
 
 ## Prompt para pegarle a Grok
 
 ```
-Tu contexto de este proyecto está desactualizado. Hay una versión nueva marcada como v2-negocio-completo en https://github.com/Cancercervero/Pagos.
-Lee GROK_LEEME_PRIMERO.md: te perdiste todo el módulo de negocio (Donna: almacén, recetas, compras a proveedores, archivo de clientas, márgenes; tienda; atención a clientes; onboarding). Después relee INSTRUCCIONES.md completo (secciones 2, 3, 9, 13B y 15) y DONNA_PROPUESTA_COMERCIAL.md.
-Descarta lo que hayas propuesto sin esto. Confirma en 5 líneas: qué agrega Donna, cuál es la cadena completa de la demo (pago → servicio → inventario → compra) y qué no puede ver el rol staff. Luego rehaz el pitch, el README y el guion del video con esa cadena y con el ROI de la propuesta.
+Tu contexto de este proyecto está desactualizado. La versión vigente es v3-michingon en https://github.com/Cancercervero/Pagos.
+Lee en orden: GROK_LEEME_PRIMERO.md, MICHINGON.md, INSTRUCCIONES.md y PROMPTS.md (fases M0–M6).
+Cambio clave: la base del proyecto es michingon3/, nuestra plataforma de negocio ya en vivo (Next.js + Firebase): POS, inventario, recetas, clientes, proveedores, pedidos, facturas, guía SAT, staff, modo personas, biometría y flujos de IA. Los pagos con pey/CoDi y el agente de WhatsApp se construyen DENTRO de Michingón en TypeScript. Donna (referencia_cerberus/salon_almacen) es lógica a portar para el inventario inteligente y las compras al proveedor.
+Descarta todo lo que hayas propuesto que asuma un servicio Python nuevo o ignore Michingón. Confirma en 6 líneas lo que pide la sección 3.5 de GROK_LEEME_PRIMERO.md. Luego rehaz el pitch de 60 s, la descripción para el formulario (máx. 500 caracteres), el README y el guion del video de 2 minutos con las escenas A y B de MICHINGON.md §6 y el ROI de referencia_cerberus/salon_almacen/DONNA_PROPUESTA_COMERCIAL.md.
 ```
 
-Si Grok no puede abrir el repo, pégale este archivo completo y después `INSTRUCCIONES.md`.
+Si Grok no puede abrir el repo, pégale **este archivo** y luego **`MICHINGON.md`** completos (están al inicio del PDF).
